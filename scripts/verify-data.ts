@@ -65,9 +65,7 @@ function engineCheck(p: ScoresPayload) {
     console.log(`     matters:   ${e.matters}`)
     console.log(`     changes:   ${e.whatChanges}`)
     console.log(`     why:       ${glossText(e.why)}`)
-    if (e.ifNot) console.log(`     if not:    ${glossText(e.ifNot)}`)
-    if (e.expectedHeadline) console.log(`     expected:  ${e.expectedHeadline}${m.odds ? ` [bar ${m.odds.home}/${m.odds.draw}/${m.odds.away}]` : ''}`)
-    if (e.wasExpected) console.log(`     was exp:   ${e.wasExpected}`)
+    if (m.odds) console.log(`     bar(odds): ${m.odds.home}/${m.odds.draw}/${m.odds.away}`)
   }
 }
 

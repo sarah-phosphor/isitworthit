@@ -10,9 +10,9 @@
 import type { Gloss } from './model'
 import type { Editorial } from './qualification'
 
-export type EditorialOverride = Partial<
-  Pick<Editorial, 'matters' | 'whatChanges' | 'expectedHeadline' | 'wasExpected'>
-> & { why?: Gloss; ifNot?: Gloss }
+export type EditorialOverride = Partial<Pick<Editorial, 'matters' | 'whatChanges'>> & {
+  why?: Gloss
+}
 
 export const OVERRIDES: Record<string, EditorialOverride> = {
   // (empty in v1 — computed copy stands on its own)

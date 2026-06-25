@@ -2,7 +2,7 @@
 // MatchCard renders. Mirrors the prototype's buildCard().
 
 import type { Gloss, Match } from './model'
-import { editorialFor, type QualContext } from './qualification'
+import { editorialFor, formProbabilities, type QualContext } from './qualification'
 import { applyOverride } from './overrides'
 import { timeLabel } from './dates'
 
@@ -47,16 +47,15 @@ export interface CardVM {
   changeLabel: string
   whatChanges: string
   whyGloss: GlossVM
+  venue: string
   hasChances: boolean
   chances: Chance[]
-  expectedHeadline: string
-  hasIfNot: boolean
-  ifNotGloss: GlossVM
   hasPred: boolean
   predChances: Chance[]
   openHome: () => void
   openAway: () => void
   openGroup: () => void
+  openMatch: () => void
 }
 
 const OXBLOOD = '#8a2b22'
@@ -69,10 +68,8 @@ function gloss(g?: Gloss): GlossVM {
   return { noTip: true, hasTip: false, text: g.text ?? '' }
 }
 
-function chancesFromOdds(m: Match): Chance[] {
-  const o = m.odds
-  if (!o) return []
-  const favIsHome = o.home >= o.away
+function chancesFrom(p: { home: number; draw: number; away: number }, m: Match): Chance[] {
+  const favIsHome = p.home >= p.away
   const seg = (label: string, pct: number, side: 'home' | 'draw' | 'away'): Chance => {
     const isFav = (side === 'home' && favIsHome) || (side === 'away' && !favIsHome)
     return {
@@ -83,9 +80,9 @@ function chancesFromOdds(m: Match): Chance[] {
     }
   }
   return [
-    seg(`${m.home} win`, o.home, 'home'),
-    seg('Draw', o.draw, 'draw'),
-    seg(`${m.away} win`, o.away, 'away'),
+    seg(`${m.home} win`, p.home, 'home'),
+    seg('Draw', p.draw, 'draw'),
+    seg(`${m.away} win`, p.away, 'away'),
   ]
 }
 
@@ -117,7 +114,7 @@ function predFromOdds(m: Match): Chance[] {
 export function buildCard(
   match: Match,
   ctx: QualContext,
-  nav: { openTeam: (id: string) => void; openGroup: (id: string) => void },
+  nav: { openTeam: (id: string) => void; openGroup: (id: string) => void; openMatch: (id: string) => void },
 ): CardVM {
   const e = applyOverride(editorialFor(match, ctx), match.id)
   const isLive = match.state === 'live'
@@ -126,7 +123,8 @@ export function buildCard(
   const home = match.home
   const away = match.away
 
-  const chances = isLive || isUpcoming ? chancesFromOdds(match) : []
+  const probs = match.odds ?? formProbabilities(ctx, match)
+  const chances = isLive || isUpcoming ? chancesFrom(probs, match) : []
   const predChances = isCompleted ? predFromOdds(match) : []
 
   let metaTail = ''
@@ -154,6 +152,7 @@ export function buildCard(
     groupLabel: match.group ? `Group ${match.group}` : match.roundName ?? 'Knockout',
     groupClickable: !!match.group,
     metaTail,
+    venue: match.venue ?? '',
     matterLabel: isCompleted ? 'Did it matter?' : 'Does it matter?',
     matters: e.matters,
     matterColor: /^Yes/.test(e.matters) ? OXBLOOD : '#1c1a17',
@@ -162,13 +161,11 @@ export function buildCard(
     whyGloss: gloss(e.why),
     hasChances: chances.length > 0,
     chances,
-    expectedHeadline: e.expectedHeadline ?? '',
-    hasIfNot: !!e.ifNot,
-    ifNotGloss: gloss(e.ifNot),
     hasPred: predChances.length > 0,
     predChances,
     openHome: () => homeClickable && nav.openTeam(match.homeId),
     openAway: () => awayClickable && nav.openTeam(match.awayId),
     openGroup: () => match.group && nav.openGroup(match.group),
+    openMatch: () => nav.openMatch(match.id),
   }
 }

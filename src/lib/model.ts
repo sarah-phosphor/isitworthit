@@ -50,6 +50,7 @@ export interface Match {
   away: string
   score?: { home: number; away: number }
   minute?: string // e.g. "62'" while live
+  venue?: string // e.g. "Lincoln Financial Field · Philadelphia"
   odds?: Odds
 }
 

@@ -63,3 +63,18 @@ export function fullLabel(off: number): string {
     day: 'numeric',
   }).format(dateForOffset(off))
 }
+
+// 'YYYY-MM-DD' (PT) for a day offset — used in shareable /day/<date> URLs.
+export function dateKey(off: number): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(dateForOffset(off))
+}
+
+// inverse of dateKey: offset (in PT days) for a 'YYYY-MM-DD' string
+export function offsetForKey(key: string): number {
+  return dayOffset(`${key}T19:00:00.000Z`)
+}

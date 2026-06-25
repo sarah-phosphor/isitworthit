@@ -64,9 +64,11 @@ function Bar({ chances }: { chances: Chance[] }) {
   )
 }
 
-export function MatchCard({ card }: { card: CardVM }) {
+export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMatch?: boolean }) {
   return (
     <article
+      onClick={linkToMatch ? card.openMatch : undefined}
+      className={linkToMatch ? 'mc-clickable' : undefined}
       style={{
         background: '#f8f6f0',
         border: '1px solid #e6e1d6',
@@ -77,6 +79,7 @@ export function MatchCard({ card }: { card: CardVM }) {
         display: 'flex',
         flexDirection: 'column',
         fontFamily: "'Newsreader',serif",
+        cursor: linkToMatch ? 'pointer' : 'default',
       }}
     >
       {/* state label */}
@@ -142,7 +145,10 @@ export function MatchCard({ card }: { card: CardVM }) {
           }}
         >
           <span
-            onClick={card.openHome}
+            onClick={(e) => {
+              e.stopPropagation()
+              card.openHome()
+            }}
             className={card.homeClickable ? 'lk' : undefined}
             style={{ cursor: card.homeClickable ? 'pointer' : 'default' }}
           >
@@ -150,7 +156,10 @@ export function MatchCard({ card }: { card: CardVM }) {
           </span>
           <span style={{ fontStyle: 'italic', fontWeight: 400, color: '#b0a99c' }}> vs </span>
           <span
-            onClick={card.openAway}
+            onClick={(e) => {
+              e.stopPropagation()
+              card.openAway()
+            }}
             className={card.awayClickable ? 'lk' : undefined}
             style={{ cursor: card.awayClickable ? 'pointer' : 'default' }}
           >
@@ -174,7 +183,10 @@ export function MatchCard({ card }: { card: CardVM }) {
         }}
       >
         <span
-          onClick={card.openGroup}
+          onClick={(e) => {
+            e.stopPropagation()
+            card.openGroup()
+          }}
           className={card.groupClickable ? 'lkb' : undefined}
           style={{
             cursor: card.groupClickable ? 'pointer' : 'default',
@@ -186,6 +198,11 @@ export function MatchCard({ card }: { card: CardVM }) {
         </span>
         {card.metaTail}
       </div>
+      {card.venue && (
+        <div style={{ marginTop: 4, font: "400 11.5px 'Instrument Sans',sans-serif", letterSpacing: '.02em', color: '#9a948a' }}>
+          {card.venue}
+        </div>
+      )}
 
       <div style={{ height: 1, background: '#e6e1d6', margin: '18px 0 16px' }} />
 
@@ -211,20 +228,12 @@ export function MatchCard({ card }: { card: CardVM }) {
         <GlossLine g={card.whyGloss} style={{ ...BODY, minHeight: 76 }} />
       </div>
 
-      {/* upcoming / live: expected result + if-not */}
-      {card.notCompleted && (
-        <>
-          <div style={{ marginBottom: 18 }}>
-            <div style={{ ...LBL, marginBottom: 9 }}>Expected result</div>
-            {card.hasChances ? <Bar chances={card.chances} /> : <div style={BODY}>{card.expectedHeadline}</div>}
-          </div>
-          {card.hasIfNot && (
-            <div>
-              <div style={{ ...LBL, marginBottom: 5 }}>If it goes the other way</div>
-              <GlossLine g={card.ifNotGloss} style={BODY} />
-            </div>
-          )}
-        </>
+      {/* upcoming / live: expected result */}
+      {card.notCompleted && card.hasChances && (
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ ...LBL, marginBottom: 9 }}>Expected result</div>
+          <Bar chances={card.chances} />
+        </div>
       )}
 
       {/* completed: what was predicted */}

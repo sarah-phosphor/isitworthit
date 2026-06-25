@@ -17,7 +17,7 @@ export type Status = 'through' | 'alive' | 'out' | 'unknown'
 
 export interface TeamStatus {
   status: Status
-  note: string // short label for tables/search: 'Through' | 'In the hunt' | 'Out'
+  note: string // short label for tables/search: 'Through' | 'In contention' | 'Out'
   tone: string // color
 }
 
@@ -32,9 +32,6 @@ export interface Editorial {
   matters: string // 'Yes.' | 'Somewhat.' | 'Not really.'
   whatChanges: string // tense matches the match state
   why: Gloss
-  ifNot?: Gloss
-  expectedHeadline?: string // upcoming/live
-  wasExpected?: string // completed (only when odds were available)
 }
 
 export interface QualContext {
@@ -76,7 +73,7 @@ function classify(row: GroupRow, complete: boolean): Status {
 }
 
 function shortNote(s: Status): string {
-  return s === 'through' ? 'Through' : s === 'out' ? 'Out' : s === 'alive' ? 'In the hunt' : ''
+  return s === 'through' ? 'Through' : s === 'out' ? 'Out' : s === 'alive' ? 'In contention' : ''
 }
 
 export function buildContext(payload: ScoresPayload): QualContext {
@@ -125,34 +122,30 @@ function strength(ctx: QualContext, id: string): number {
   return r.pts / games + 0.35 * (r.gd / games)
 }
 
-function expectedHeadline(ctx: QualContext, match: Match): string {
-  const o = match.odds
-  if (o) {
-    const max = Math.max(o.home, o.draw, o.away)
-    if (max === o.draw && o.draw > o.home && o.draw > o.away)
-      return 'A draw looks the likeliest result.'
-    if (Math.abs(o.home - o.away) <= 6) return 'Too close to call.'
-    return `${o.home > o.away ? match.home : match.away} are favored.`
+// Rounds three numbers to ints summing to exactly 100 (drift onto the largest).
+function to3(home: number, draw: number, away: number) {
+  let h = Math.round(home)
+  let d = Math.round(draw)
+  let a = Math.round(away)
+  const drift = 100 - (h + d + a)
+  if (drift !== 0) {
+    const m = Math.max(h, d, a)
+    if (m === h) h += drift
+    else if (m === a) a += drift
+    else d += drift
   }
-  // form-based fallback (no market odds for this game)
-  const diff = strength(ctx, match.homeId) - strength(ctx, match.awayId)
-  if (Math.abs(diff) < 1) return 'Closely matched on form.'
-  return `${diff > 0 ? match.home : match.away} are the stronger side on form.`
+  return { home: h, draw: d, away: a }
 }
 
-function wasExpectedText(match: Match): string | undefined {
-  if (!match.odds || !match.score) return undefined
-  const favIsHome = match.odds.home >= match.odds.away
-  const favName = favIsHome ? match.home : match.away
-  const actual =
-    match.score.home > match.score.away
-      ? 'home'
-      : match.score.home < match.score.away
-        ? 'away'
-        : 'draw'
-  if (actual === (favIsHome ? 'home' : 'away')) return `Yes — ${favName} were favored and won.`
-  if (actual === 'draw') return 'A draw was always a live possibility.'
-  return 'A bit of an upset.'
+// Form-based win/draw/win estimate from tournament results — used for the
+// expected-result bar when no live market odds exist (most upcoming games).
+export function formProbabilities(ctx: QualContext, match: Match) {
+  const diff = strength(ctx, match.homeId) - strength(ctx, match.awayId)
+  const pHome = 1 / (1 + Math.exp(-0.9 * diff))
+  let draw = 0.28 - 0.05 * Math.abs(diff)
+  draw = Math.max(0.08, Math.min(0.3, draw))
+  const rest = 1 - draw
+  return to3(rest * pHome * 100, draw * 100, rest * (1 - pHome) * 100)
 }
 
 function rankPhrase(rank: number, complete: boolean): string {
@@ -173,7 +166,7 @@ function outcomeClause(ctx: QualContext, id: string, name: string, complete: boo
   const s = statusOf(ctx, id)
   const r = ctx.rowByTeam.get(id)
   if (s === 'through') return `${name} ${complete && r ? rankPhrase(r.rank, true) : 'are through'}`
-  if (s === 'alive') return `${name} finished third — waiting on the best-third math`
+  if (s === 'alive') return complete ? `${name} finished third` : `${name} are still in it`
   if (s === 'out') return `${name} are out`
   return `${name} ${r ? rankPhrase(r.rank, complete) : 'are still in it'}`
 }
@@ -189,24 +182,21 @@ export function groupSummary(g: Group, ctx: QualContext): string {
   if (through.length)
     parts.push(`${list(through)} ${through.length > 1 ? 'have' : 'has'} reached the knockout rounds`)
   if (alive.length)
-    parts.push(`${list(alive)} ${alive.length > 1 ? 'are' : 'is'} still chasing a best-third place`)
+    parts.push(`${list(alive)} ${alive.length > 1 ? 'are' : 'is'} still in contention`)
   if (out.length) parts.push(`${list(out)} ${out.length > 1 ? 'are' : 'is'} out`)
   return parts.length ? parts.join('. ') + '.' : 'Group games are still to be played.'
 }
 
 export function teamStatusLine(id: string, ctx: QualContext): string {
   const s = statusOf(ctx, id)
-  const next = ctx.payload.matches.find(
-    (m) => (m.state === 'upcoming' || m.state === 'live') && (m.homeId === id || m.awayId === id),
-  )
-  if (s === 'through')
-    return next
-      ? 'Already through to the knockout rounds — with a game still to play.'
-      : 'Through to the knockout rounds.'
+  const rank = ctx.rowByTeam.get(id)?.rank
+  if (s === 'through') return 'Through to the knockout rounds.'
   if (s === 'alive')
-    return 'Currently third in the group — still in the hunt for one of the eight best third-place spots.'
+    return rank && rank <= 2
+      ? 'In a qualifying spot, but not yet safe.'
+      : 'Just outside the cut-off — still has a chance.'
   if (s === 'out') return 'Out of the tournament.'
-  return next ? 'Still to play its group games.' : ''
+  return 'Still to play its group games.'
 }
 
 export function editorialFor(match: Match, ctx: QualContext): Editorial {
@@ -227,15 +217,12 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
             ? `A knockout tie — ${w} advance and ${w === home ? away : home} go home.`
             : 'A knockout tie, level after 90 minutes and decided in extra time or penalties.',
         ),
-        wasExpected: wasExpectedText(match),
       }
     }
     return {
       matters: 'Yes.',
       whatChanges: 'Everything — the winner goes through, the loser is out.',
       why: tip('It’s a ', 'knockout', ' game, so there’s no safety net.', 'knockout'),
-      ifNot: tip('Level after 90 minutes and it goes to ', 'extra time, then penalties', '.', 'penalties'),
-      expectedHeadline: expectedHeadline(ctx, match),
     }
   }
 
@@ -276,7 +263,7 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
           : `The draw ${complete ? 'settled' : 'shaped'} the final group order.`,
       )
     }
-    return { matters, whatChanges, why, wasExpected: wasExpectedText(match) }
+    return { matters, whatChanges, why }
   }
 
   // ----- upcoming / live group match -----
@@ -285,7 +272,6 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
       matters: 'Not really.',
       whatChanges: 'Nothing — both teams are already out.',
       why: text(`Neither ${home} nor ${away} can reach the knockout rounds, so the result won’t change the group.`),
-      expectedHeadline: expectedHeadline(ctx, match),
     }
   }
   if (oneThroughOneOut) {
@@ -293,7 +279,6 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
       matters: 'Not really.',
       whatChanges: `Not much — ${throughName} are through and ${outName} are out.`,
       why: text(`${throughName} have already qualified; ${outName} have already been eliminated.`),
-      expectedHeadline: expectedHeadline(ctx, match),
     }
   }
   if (bothThrough) {
@@ -314,8 +299,6 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
             ' in the next round.',
             'seeding',
           ),
-      ifNot: text('The other team finishes first instead — both still advance.'),
-      expectedHeadline: expectedHeadline(ctx, match),
     }
   }
   if (bothAlive) {
@@ -323,8 +306,6 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
       matters: 'Yes.',
       whatChanges: `Who goes through from Group ${match.group}.`,
       why: text(`${home} and ${away} are both still fighting for a knockout place — this result helps decide who takes it.`),
-      ifNot: text('Win and you’re in control of your own fate; drop points and you’re leaning on the other group game.'),
-      expectedHeadline: expectedHeadline(ctx, match),
     }
   }
   if (aliveName) {
@@ -336,30 +317,19 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
         matters: 'Somewhat.',
         whatChanges: `Whether ${aliveName} confirm their place in the next round.`,
         why: text(`${aliveName} sit in a qualifying spot and are close to going through — this is about getting it over the line.`),
-        ifNot: text(`Only a poor result here would put ${aliveName} back in any danger.`),
-        expectedHeadline: expectedHeadline(ctx, match),
       }
     }
     if (rank === 3) {
       return {
         matters: 'Yes.',
         whatChanges: `Whether ${aliveName} can still reach the knockout rounds.`,
-        why: tip(
-          `${aliveName} need a result — and even then, third place only goes through if they’re among the `,
-          'eight best third-place teams',
-          '.',
-          'bestThird',
-        ),
-        ifNot: tip('Without a win, ', 'they’re most likely out', '.', 'bestThird'),
-        expectedHeadline: expectedHeadline(ctx, match),
+        why: text(`${aliveName} need a result here to keep their hopes of going through alive.`),
       }
     }
     return {
       matters: 'Yes.',
       whatChanges: `Whether ${aliveName} can still sneak through.`,
-      why: text(`${aliveName} need a big win — and other results to fall their way — to reach the knockouts.`),
-      ifNot: text(`Anything less, and ${aliveName} are out.`),
-      expectedHeadline: expectedHeadline(ctx, match),
+      why: text(`${aliveName} need a big win, and other results to go their way, to reach the knockouts.`),
     }
   }
   // early / not-yet-resolved group
@@ -367,7 +337,6 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
     matters: 'Yes.',
     whatChanges: 'Points toward reaching the knockout rounds.',
     why: text(`${home} and ${away} are both still chasing a place in the next round.`),
-    expectedHeadline: expectedHeadline(ctx, match),
   }
 }
 

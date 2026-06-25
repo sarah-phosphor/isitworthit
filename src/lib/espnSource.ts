@@ -186,6 +186,13 @@ function parseMatch(ev: any, teams: Record<string, Team>): Match | null {
   if (state === 'live')
     minute = comp.status?.type?.shortDetail || comp.status?.displayClock || undefined
 
+  const vRaw = comp.venue ?? ev.venue
+  let venue: string | undefined
+  if (vRaw?.fullName) {
+    const city = String(vRaw.address?.city ?? '').split(',')[0].trim()
+    venue = city ? `${vRaw.fullName} · ${city}` : vRaw.fullName
+  }
+
   return {
     id: String(ev.id),
     stage,
@@ -199,6 +206,7 @@ function parseMatch(ev: any, teams: Record<string, Team>): Match | null {
     away,
     score,
     minute,
+    venue,
     odds: parseOdds(comp),
   }
 }

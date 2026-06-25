@@ -84,6 +84,7 @@ export async function getScoresFromOpenFootball(): Promise<ScoresPayload> {
       home: t1,
       away: t2,
       score: hasScore ? { home: ft[0], away: ft[1] } : undefined,
+      venue: typeof m.ground === 'string' ? m.ground : undefined,
     })
 
     if (isGroup && gid && hasScore) {

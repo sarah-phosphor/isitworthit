@@ -35,3 +35,7 @@ input::placeholder { color: #b0a99c; }
 .lkb:hover { color: #8a2b22 !important; border-bottom-color: #8a2b22 !important; }
 .wc-row:hover { background: #efeadf; }
 .gr-row:hover { background: #efeadf; }
+
+/* whole-card link affordance */
+.mc-clickable { transition: box-shadow .15s ease, border-color .15s ease; }
+.mc-clickable:hover { box-shadow: 0 3px 14px rgba(0,0,0,.11); border-color: #d8d2c5; }

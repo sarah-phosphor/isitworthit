@@ -24,6 +24,12 @@ Two layers, deliberately separated:
    Win-probability bars come from ESPN's live betting odds; when a game has no full
    odds yet (most upcoming games), it falls back to a qualitative "favored" line.
 
+### Shareable URLs
+Path-based client routing (History API; the `netlify.toml` SPA redirect makes deep
+links work): `/` (today), `/day/<YYYY-MM-DD>`, `/search`, `/group/<A–L>`,
+`/team/<country-slug>`, `/match/<id>`. Cards and names link through; browser
+back/forward work.
+
 ### Optional hand-polish
 Every match has complete automatic copy. `src/lib/overrides.ts` is an (empty) map
 where a human can override any field for a marquee match — purely optional sugar.
