@@ -1,0 +1,37 @@
+/* Global styles ported verbatim from the Claude Design prototype (Direction A —
+   oxblood, all-serif). Per-element look stays as inline styles in the
+   components; these are the shared rules + hover behaviors the prototype
+   expressed via its runtime's `style-hover`. */
+
+* { box-sizing: border-box; }
+body { margin: 0; background: #f1ede4; -webkit-font-smoothing: antialiased; }
+
+.wc-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 360px));
+  gap: 22px;
+  justify-content: start;
+  align-items: stretch;
+}
+.wc-cards > * { height: 100%; }
+
+input::placeholder { color: #b0a99c; }
+
+/* live "pulse" dot */
+@keyframes livepulse { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }
+
+/* glossed-term tooltip (match card) */
+.mc-tip { position: relative; }
+.mc-tip .mc-pop {
+  position: absolute; left: 0; top: calc(100% + 8px); width: 248px;
+  opacity: 0; pointer-events: none; transition: opacity .15s ease; z-index: 40;
+}
+.mc-tip:hover .mc-pop { opacity: 1; }
+
+/* hover affordances (prototype used runtime style-hover) */
+.lk { cursor: pointer; }
+.lk:hover { color: #8a2b22 !important; }
+.lkb { cursor: pointer; }
+.lkb:hover { color: #8a2b22 !important; border-bottom-color: #8a2b22 !important; }
+.wc-row:hover { background: #efeadf; }
+.gr-row:hover { background: #efeadf; }

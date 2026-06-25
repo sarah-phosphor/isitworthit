@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+@keyframes livepulse{0%,100%{opacity:.3}50%{opacity:1}}
+.tipwrap{position:relative}
+.tipwrap .tip{position:absolute;left:0;top:calc(100% + 9px);width:250px;opacity:0;pointer-events:none;transition:opacity .15s ease;z-index:30}
+.tipwrap:hover .tip{opacity:1}
+</style>
+</helmet>
+
+<!-- ============ MASTHEAD ============ -->
+<div style="position:absolute;left:80px;top:74px;width:1424px">
+  <div data-drags-parent="1" style="position:absolute;top:-24px;left:0;font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(60,55,48,.6)">Concept · Card directions</div>
+  <div style="background:#f8f6f0;border:1px solid #e6e1d6;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:30px 38px;display:flex;justify-content:space-between;align-items:flex-end;gap:48px">
+    <div>
+      <h1 style="margin:0;font:500 35px/1.04 'Newsreader',serif;letter-spacing:-.015em;color:#1c1a17">World Cup <span style="font-style:italic;font-weight:400;color:#6b6660" data-comment-anchor="18b82cfd75-span">for Non-Soccer Fans</span></h1>
+      <p style="margin:11px 0 0;font:400 18px 'Newsreader',serif;color:#6b6660" data-comment-anchor="acd16b4090-p">Today's games, translated into plain English.</p>
+    </div>
+    <p style="margin:0;max-width:330px;font:400 13.5px/1.55 'Instrument Sans',sans-serif;color:#8a857d;text-align:right">Three editorial treatments of one card — same copy, same hierarchy, different accent &amp; labeling. Each column shows the upcoming, live, and completed states. Pick one and I'll build the working site.</p>
+  </div>
+</div>
+
+<!-- ============ DIRECTION A — THE COLUMN (oxblood) ============ -->
+<div style="position:absolute;left:80px;top:264px;width:452px">
+  <div data-drags-parent="1" style="position:absolute;top:-26px;left:0;font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(60,55,48,.72)">A · The Column <span style="color:#8a2b22">— oxblood, all-serif</span></div>
+  <div style="background:#f8f6f0;border:1px solid #e6e1d6;box-shadow:0 1px 3px rgba(0,0,0,.07)">
+
+    <!-- A · UPCOMING -->
+    <article style="padding:26px 28px 24px">
+      <div style="font:500 10px 'Instrument Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#bcb5a8;margin-bottom:15px">Upcoming</div>
+      <h3 style="margin:0;font:500 27px/1.12 'Newsreader',serif;letter-spacing:-.01em;color:#1c1a17">Norway <span style="font-style:italic;font-weight:400;color:#b0a99c">vs</span> France</h3>
+      <div style="margin-top:7px;font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.05em;color:#8a857d" data-comment-anchor="560e2d5f5a-div">Group I · 12:00 PM</div>
+      <div style="height:1px;background:#e6e1d6;margin:18px 0 16px"></div>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:17px">
+        <span style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d">Does it matter?</span>
+        <span style="font:600 18px 'Newsreader',serif;color:#8a2b22">Yes.</span>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">What changes?</div>
+        <div style="font:500 19px/1.38 'Newsreader',serif;color:#1c1a17">Who wins Group I.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Why?</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">France and Norway are tied on points. France has the goal-difference edge, so a draw is enough for France. Norway needs to win.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Expected result</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">France is favored.</div>
+      </div>
+      <div>
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">If not</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">France still advances, but Norway takes first place.</div>
+      </div>
+    </article>
+    <div style="height:1px;background:#e6e1d6"></div>
+
+    <!-- A · LIVE -->
+    <article style="padding:26px 28px 24px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:15px">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8a2b22;animation:livepulse 1.6s ease-in-out infinite"></span>
+        <span style="font:500 10px 'Instrument Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#8a2b22">Live · 62′</span>
+      </div>
+      <h3 style="margin:0;font:500 27px/1.12 'Newsreader',serif;letter-spacing:-.01em;color:#1c1a17">Turkey <span style="font-style:italic;font-weight:400;color:#b0a99c">vs</span> United States</h3>
+      <div style="margin-top:9px;display:flex;align-items:baseline;gap:14px">
+        <span style="font:500 17px 'Newsreader',serif;color:#1c1a17">Turkey 1 &nbsp;·&nbsp; United States 1</span>
+      </div>
+      <div style="margin-top:6px;font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.05em;color:#8a857d">Group D</div>
+      <div style="height:1px;background:#e6e1d6;margin:18px 0 16px"></div>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:17px">
+        <span style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d">Does it matter?</span>
+        <span style="font:600 18px 'Newsreader',serif;color:#8a2b22">Yes.</span>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">What changes?</div>
+        <div style="font:500 19px/1.38 'Newsreader',serif;color:#1c1a17">Whether the U.S. wins the group.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Why?</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631" data-comment-anchor="d39a5420c2-div">The U.S. controls the group with a win. Dropped points could change who they play next.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Expected result</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631" data-comment-anchor="f14ebe7e3d-div">The U.S. is favored.</div>
+      </div>
+      <div class="tipwrap">
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">If not</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631" data-comment-anchor="9123d06ba7-div"><span style="border-bottom:1px dotted #9a948a;cursor:help" data-comment-anchor="1e56442efe-span">They still may advance</span>, but the path gets less clean.</div>
+        <div class="tip">
+          <div style="background:#1c1a17;color:#f1ede4;padding:12px 14px;font:400 13px/1.5 'Instrument Sans',sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.22)"><b style="color:#fff">“May”</b> — a draw only sends the U.S. through outright if Turkey doesn't win their next match. A loss puts them into the third-place math.</div>
+        </div>
+      </div>
+    </article>
+    <div style="height:1px;background:#e6e1d6"></div>
+
+    <!-- A · COMPLETED -->
+    <article style="padding:26px 28px 26px;background:#f3f0e8">
+      <div style="font:500 10px 'Instrument Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#bcb5a8;margin-bottom:15px">Final</div>
+      <h3 style="margin:0;font:500 27px/1.12 'Newsreader',serif;letter-spacing:-.01em;color:#1c1a17">France <span style="font-weight:600">3</span><span style="color:#b0a99c">,</span> Iraq <span style="font-weight:600">0</span></h3>
+      <div style="margin-top:7px;font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.05em;color:#8a857d">Group I · Final</div>
+      <div style="height:1px;background:#ddd7ca;margin:18px 0 16px"></div>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:17px">
+        <span style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d">Did it matter?</span>
+        <span style="font:600 18px 'Newsreader',serif;color:#8a2b22">Yes.</span>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">What changed?</div>
+        <div style="font:500 19px/1.38 'Newsreader',serif;color:#1c1a17">France stayed in control of the group.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Why?</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">The win kept France level with Norway on points and ahead on goal difference.</div>
+      </div>
+      <div>
+        <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Was that expected?</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">Yes.</div>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- ============ DIRECTION B — THE ALMANAC (ink blue, mono labels, ruled) ============ -->
+<div style="position:absolute;left:566px;top:264px;width:452px">
+  <div data-drags-parent="1" style="position:absolute;top:-26px;left:0;font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(60,55,48,.72)">B · The Almanac <span style="color:#1f3a5c">— ink blue, mono labels</span></div>
+  <div style="background:#f8f6f0;border:1px solid #e6e1d6;box-shadow:0 1px 3px rgba(0,0,0,.07)">
+
+    <!-- B · UPCOMING -->
+    <article style="padding:26px 28px 24px">
+      <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#b3aca0;margin-bottom:15px">Upcoming</div>
+      <h3 style="margin:0;font:500 27px/1.12 'Newsreader',serif;letter-spacing:-.01em;color:#1c1a17">Norway <span style="font-style:italic;font-weight:400;color:#b0a99c">vs</span> France</h3>
+      <div style="margin-top:8px;font:400 11px 'JetBrains Mono',monospace;letter-spacing:.04em;color:#8a857d">GROUP I · 12:00 PM</div>
+      <div style="margin-top:18px;border-top:2px solid #1f3a5c;padding-top:14px;display:flex;align-items:baseline;justify-content:space-between">
+        <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#8a857d">Does it matter?</span>
+        <span style="font:600 18px 'Newsreader',serif;color:#1f3a5c">Yes.</span>
+      </div>
+      <div style="border-top:1px solid #e6e1d6;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">What changes</div>
+        <div style="font:500 19px/1.38 'Newsreader',serif;color:#1c1a17">Who wins Group I.</div>
+      </div>
+      <div style="border-top:1px solid #e6e1d6;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Why</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">France and Norway are tied on points. France has the goal-difference edge, so a draw is enough for France. Norway needs to win.</div>
+      </div>
+      <div style="border-top:1px solid #e6e1d6;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Expected result</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">France is favored.</div>
+      </div>
+      <div style="border-top:1px solid #e6e1d6;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">If not</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">France still advances, but Norway takes first place.</div>
+      </div>
+    </article>
+    <div style="height:1px;background:#e6e1d6"></div>
+
+    <!-- B · LIVE -->
+    <article style="padding:26px 28px 24px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:15px">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1f3a5c;animation:livepulse 1.6s ease-in-out infinite"></span>
+        <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#1f3a5c">Live · 62′</span>
+      </div>
+      <h3 style="margin:0;font:500 27px/1.12 'Newsreader',serif;letter-spacing:-.01em;color:#1c1a17">Turkey <span style="font-style:italic;font-weight:400;color:#b0a99c">vs</span> United States</h3>
+      <div style="margin-top:9px;font:500 17px 'Newsreader',serif;color:#1c1a17">Turkey 1 &nbsp;·&nbsp; United States 1</div>
+      <div style="margin-top:7px;font:400 11px 'JetBrains Mono',monospace;letter-spacing:.04em;color:#8a857d">GROUP D</div>
+      <div style="margin-top:18px;border-top:2px solid #1f3a5c;padding-top:14px;display:flex;align-items:baseline;justify-content:space-between">
+        <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#8a857d">Does it matter?</span>
+        <span style="font:600 18px 'Newsreader',serif;color:#1f3a5c">Yes.</span>
+      </div>
+      <div style="border-top:1px solid #e6e1d6;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">What changes</div>
+        <div style="font:500 19px/1.38 'Newsreader',serif;color:#1c1a17">Whether the U.S. wins the group.</div>
+      </div>
+      <div style="border-top:1px solid #e6e1d6;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Why</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">The U.S. controls the group with a win. Dropped points could change who they play next.</div>
+      </div>
+      <div style="border-top:1px solid #e6e1d6;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Expected result</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">The U.S. is favored.</div>
+      </div>
+      <div class="tipwrap" style="border-top:1px solid #e6e1d6;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">If not</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631"><span style="border-bottom:1px dotted #9a948a;cursor:help">They still may advance</span>, but the path gets less clean.</div>
+        <div class="tip">
+          <div style="background:#1c1a17;color:#f1ede4;padding:12px 14px;font:400 13px/1.5 'Instrument Sans',sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.22)"><b style="color:#fff">“May”</b> — a draw only sends the U.S. through outright if Turkey doesn't win their next match. A loss puts them into the third-place math.</div>
+        </div>
+      </div>
+    </article>
+    <div style="height:1px;background:#e6e1d6"></div>
+
+    <!-- B · COMPLETED -->
+    <article style="padding:26px 28px 26px;background:#f3f0e8">
+      <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#b3aca0;margin-bottom:15px">Final</div>
+      <h3 style="margin:0;font:500 27px/1.12 'Newsreader',serif;letter-spacing:-.01em;color:#1c1a17">France <span style="font-weight:600">3</span><span style="color:#b0a99c">,</span> Iraq <span style="font-weight:600">0</span></h3>
+      <div style="margin-top:8px;font:400 11px 'JetBrains Mono',monospace;letter-spacing:.04em;color:#8a857d">GROUP I · FINAL</div>
+      <div style="margin-top:18px;border-top:2px solid #1f3a5c;padding-top:14px;display:flex;align-items:baseline;justify-content:space-between">
+        <span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#8a857d">Did it matter?</span>
+        <span style="font:600 18px 'Newsreader',serif;color:#1f3a5c">Yes.</span>
+      </div>
+      <div style="border-top:1px solid #ddd7ca;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">What changed</div>
+        <div style="font:500 19px/1.38 'Newsreader',serif;color:#1c1a17">France stayed in control of the group.</div>
+      </div>
+      <div style="border-top:1px solid #ddd7ca;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Why</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">The win kept France level with Norway on points and ahead on goal difference.</div>
+      </div>
+      <div style="border-top:1px solid #ddd7ca;padding-top:13px;margin-top:13px">
+        <div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Was that expected</div>
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">Yes.</div>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- ============ DIRECTION C — THE BROADSHEET (ochre, numbered) ============ -->
+<div style="position:absolute;left:1052px;top:264px;width:452px">
+  <div data-drags-parent="1" style="position:absolute;top:-26px;left:0;font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(60,55,48,.72)">C · The Broadsheet <span style="color:#9a6a14">— ochre, numbered</span></div>
+  <div style="background:#f8f6f0;border:1px solid #e6e1d6;box-shadow:0 1px 3px rgba(0,0,0,.07)">
+
+    <!-- C · UPCOMING -->
+    <article style="padding:28px 30px 26px">
+      <div style="font:500 10px 'Instrument Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#bcb5a8;margin-bottom:14px">Upcoming</div>
+      <h3 style="margin:0;font:500 31px/1.08 'Newsreader',serif;letter-spacing:-.015em;color:#1c1a17">Norway <span style="font-style:italic;font-weight:400;color:#b0a99c">vs</span><br>France</h3>
+      <div style="margin-top:9px;font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.05em;color:#8a857d">Group I · 12:00 PM</div>
+      <div style="height:2px;background:#1c1a17;margin:18px 0 18px"></div>
+      <div style="display:flex;gap:13px;align-items:baseline;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px">01</span>
+        <div style="flex:1"><span style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d">Does it matter? &nbsp;</span><span style="font:600 13px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#9a6a14">Yes</span></div>
+      </div>
+      <div style="display:flex;gap:13px;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">02</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">What changes</div><div style="font:500 19px/1.36 'Newsreader',serif;color:#1c1a17">Who wins Group I.</div></div>
+      </div>
+      <div style="display:flex;gap:13px;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">03</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Why</div><div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">France and Norway are tied on points. France has the goal-difference edge, so a draw is enough for France. Norway needs to win.</div></div>
+      </div>
+      <div style="display:flex;gap:13px;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">04</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Expected result</div><div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">France is favored.</div></div>
+      </div>
+      <div style="display:flex;gap:13px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">05</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">If not</div><div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">France still advances, but Norway takes first place.</div></div>
+      </div>
+    </article>
+    <div style="height:1px;background:#e6e1d6"></div>
+
+    <!-- C · LIVE -->
+    <article style="padding:28px 30px 26px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#9a6a14;animation:livepulse 1.6s ease-in-out infinite"></span>
+        <span style="font:500 10px 'Instrument Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#9a6a14">Live · 62′</span>
+      </div>
+      <h3 style="margin:0;font:500 31px/1.08 'Newsreader',serif;letter-spacing:-.015em;color:#1c1a17">Turkey <span style="font-style:italic;font-weight:400;color:#b0a99c">vs</span><br>United States</h3>
+      <div style="margin-top:9px;font:500 17px 'Newsreader',serif;color:#1c1a17">Turkey 1 &nbsp;·&nbsp; United States 1</div>
+      <div style="margin-top:6px;font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.05em;color:#8a857d">Group D</div>
+      <div style="height:2px;background:#1c1a17;margin:18px 0 18px"></div>
+      <div style="display:flex;gap:13px;align-items:baseline;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px">01</span>
+        <div style="flex:1"><span style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d">Does it matter? &nbsp;</span><span style="font:600 13px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#9a6a14">Yes</span></div>
+      </div>
+      <div style="display:flex;gap:13px;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">02</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">What changes</div><div style="font:500 19px/1.36 'Newsreader',serif;color:#1c1a17">Whether the U.S. wins the group.</div></div>
+      </div>
+      <div style="display:flex;gap:13px;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">03</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Why</div><div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">The U.S. controls the group with a win. Dropped points could change who they play next.</div></div>
+      </div>
+      <div style="display:flex;gap:13px;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">04</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Expected result</div><div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">The U.S. is favored.</div></div>
+      </div>
+      <div class="tipwrap" style="display:flex;gap:13px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">05</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">If not</div><div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631"><span style="border-bottom:1px dotted #9a948a;cursor:help">They still may advance</span>, but the path gets less clean.</div>
+          <div class="tip"><div style="background:#1c1a17;color:#f1ede4;padding:12px 14px;font:400 13px/1.5 'Instrument Sans',sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.22)"><b style="color:#fff">“May”</b> — a draw only sends the U.S. through outright if Turkey doesn't win their next match. A loss puts them into the third-place math.</div></div>
+        </div>
+      </div>
+    </article>
+    <div style="height:1px;background:#e6e1d6"></div>
+
+    <!-- C · COMPLETED -->
+    <article style="padding:28px 30px 28px;background:#f3f0e8">
+      <div style="font:500 10px 'Instrument Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#bcb5a8;margin-bottom:14px">Final</div>
+      <h3 style="margin:0;font:500 31px/1.08 'Newsreader',serif;letter-spacing:-.015em;color:#1c1a17">France <span style="font-weight:600">3</span><span style="color:#b0a99c">,</span> Iraq <span style="font-weight:600">0</span></h3>
+      <div style="margin-top:9px;font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.05em;color:#8a857d">Group I · Final</div>
+      <div style="height:2px;background:#1c1a17;margin:18px 0 18px"></div>
+      <div style="display:flex;gap:13px;align-items:baseline;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px">01</span>
+        <div style="flex:1"><span style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d">Did it matter? &nbsp;</span><span style="font:600 13px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#9a6a14">Yes</span></div>
+      </div>
+      <div style="display:flex;gap:13px;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">02</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">What changed</div><div style="font:500 19px/1.36 'Newsreader',serif;color:#1c1a17">France stayed in control of the group.</div></div>
+      </div>
+      <div style="display:flex;gap:13px;margin-bottom:18px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">03</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Why</div><div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">The win kept France level with Norway on points and ahead on goal difference.</div></div>
+      </div>
+      <div style="display:flex;gap:13px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:#c79a3e;flex:0 0 auto;width:16px;padding-top:4px">04</span>
+        <div style="flex:1"><div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Was that expected</div><div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">Yes.</div></div>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- post-it note -->
+<div style="position:absolute;left:1052px;top:1486px;width:300px;background:#fef4a8;padding:14px 16px;font:400 13px/1.5 'Instrument Sans',sans-serif;color:#5c5320;box-shadow:0 2px 8px rgba(0,0,0,.12);transform:rotate(-1.2deg)">
+  The “What changes?” line is the product — it's set largest in every direction so the eye lands there first, before the score or time.
+</div>
+</x-dc>
+</body>
+</html>

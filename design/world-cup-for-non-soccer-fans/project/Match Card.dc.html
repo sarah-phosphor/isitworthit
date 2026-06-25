@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+@keyframes livepulse{0%,100%{opacity:.3}50%{opacity:1}}
+.mc-tip{position:relative}
+.mc-tip .mc-pop{position:absolute;left:0;top:calc(100% + 8px);width:248px;opacity:0;pointer-events:none;transition:opacity .15s ease;z-index:40}
+.mc-tip:hover .mc-pop{opacity:1}
+</style>
+</helmet>
+<article style="background:#f8f6f0;border:1px solid #e6e1d6;box-shadow:0 1px 3px rgba(0,0,0,.07);padding:26px 28px 24px;width:100%;height:100%;display:flex;flex-direction:column;font-family:'Newsreader',serif">
+
+  <!-- STATE LABEL -->
+  <sc-if value="{{ match.isLive }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:15px">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8a2b22;animation:livepulse 1.6s ease-in-out infinite"></span>
+      <span style="font:500 10px 'Instrument Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#8a2b22">{{ match.liveMinute }}</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ match.isUpcoming }}" hint-placeholder-val="{{ true }}">
+    <div style="font:500 10px 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#6b6660;margin-bottom:15px">Upcoming</div>
+  </sc-if>
+  <sc-if value="{{ match.isCompleted }}" hint-placeholder-val="{{ true }}">
+    <div style="font:500 10px 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#6b6660;margin-bottom:15px">Final</div>
+  </sc-if>
+
+  <!-- MATCHUP + SCORE (fixed height so cards align row-to-row) -->
+  <div style="min-height:58px">
+  <h3 style="margin:0;font:500 27px/1.12 'Newsreader',serif;letter-spacing:-.01em;color:#1c1a17">
+    <span onClick="{{ match.openHome }}" style="cursor:pointer" style-hover="color:#8a2b22">{{ match.homeName }}</span>
+    <span style="font-style:italic;font-weight:400;color:#b0a99c"> vs </span>
+    <span onClick="{{ match.openAway }}" style="cursor:pointer" style-hover="color:#8a2b22">{{ match.awayName }}</span>
+  </h3>
+
+  <!-- SCORE STRIP (live + final) -->
+  <sc-if value="{{ match.hasScore }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:10px;font:500 19px 'Newsreader',serif;color:#1c1a17">{{ match.scoreStrip }}</div>
+  </sc-if>
+  </div>
+
+  <!-- META: group (clickable) + tail -->
+  <div style="margin-top:7px;font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.05em;color:#8a857d">
+    <span onClick="{{ match.openGroup }}" style="cursor:pointer;border-bottom:1px solid #d3ccbf;padding-bottom:1px" style-hover="color:#8a2b22;border-bottom-color:#8a2b22">{{ match.groupLabel }}</span>{{ match.metaTail }}
+  </div>
+
+  <div style="height:1px;background:#e6e1d6;margin:18px 0 16px"></div>
+
+  <!-- DOES IT MATTER -->
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:17px">
+    <span style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d">{{ match.matterLabel }}</span>
+    <span style="font:600 18px 'Newsreader',serif;color:{{ match.matterColor }}">{{ match.matters }}</span>
+  </div>
+
+  <!-- WHAT CHANGES -->
+  <div style="margin-bottom:16px">
+    <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">{{ match.changeLabel }}</div>
+    <div style="font:500 19px/1.38 'Newsreader',serif;color:#1c1a17;min-height:54px">{{ match.whatChanges }}</div>
+  </div>
+
+  <!-- WHY (glossed) -->
+  <div style="margin-bottom:16px">
+    <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">Why?</div>
+    <sc-if value="{{ match.whyGloss.noTip }}" hint-placeholder-val="{{ true }}">
+      <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631;min-height:76px">{{ match.whyGloss.text }}</div>
+    </sc-if>
+    <sc-if value="{{ match.whyGloss.hasTip }}" hint-placeholder-val="{{ false }}">
+      <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631;min-height:76px">{{ match.whyGloss.pre }}<span class="mc-tip"><span style="border-bottom:1px dotted #9a948a;cursor:help">{{ match.whyGloss.term }}</span><span class="mc-pop"><span style="display:block;background:#1c1a17;color:#f1ede4;padding:11px 13px;font:400 13px/1.5 'Instrument Sans',sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.24)">{{ match.whyGloss.tip }}</span></span></span>{{ match.whyGloss.post }}</div>
+    </sc-if>
+  </div>
+
+  <!-- EXPECTED RESULT + CHANCES (upcoming/live) -->
+  <sc-if value="{{ match.notCompleted }}" hint-placeholder-val="{{ true }}">
+    <div style="margin-bottom:18px">
+      <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:9px">Expected result</div>
+      <div style="display:flex;gap:2px;height:7px;overflow:hidden">
+        <sc-for list="{{ match.chances }}" as="c" hint-placeholder-count="3">
+          <div style="height:7px;background:{{ c.color }};width:{{ c.pct }}%"></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px">
+        <sc-for list="{{ match.chances }}" as="c" hint-placeholder-count="3">
+          <span style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.01em;color:{{ c.legendColor }}">{{ c.label }} {{ c.pct }}%</span>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- IF NOT (glossed) -->
+    <div>
+      <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:5px">If it goes the other way</div>
+      <sc-if value="{{ match.ifNotGloss.noTip }}" hint-placeholder-val="{{ true }}">
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">{{ match.ifNotGloss.text }}</div>
+      </sc-if>
+      <sc-if value="{{ match.ifNotGloss.hasTip }}" hint-placeholder-val="{{ false }}">
+        <div style="font:400 16px/1.52 'Newsreader',serif;color:#3a3631">{{ match.ifNotGloss.pre }}<span class="mc-tip"><span style="border-bottom:1px dotted #9a948a;cursor:help">{{ match.ifNotGloss.term }}</span><span class="mc-pop"><span style="display:block;background:#1c1a17;color:#f1ede4;padding:11px 13px;font:400 13px/1.5 'Instrument Sans',sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.24)">{{ match.ifNotGloss.tip }}</span></span></span>{{ match.ifNotGloss.post }}</div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- WHAT WAS PREDICTED (completed) -->
+  <sc-if value="{{ match.hasPred }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-bottom:16px">
+      <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:9px">What was predicted</div>
+      <div style="display:flex;gap:2px;height:7px;overflow:hidden">
+        <sc-for list="{{ match.predChances }}" as="c" hint-placeholder-count="3">
+          <div style="height:7px;background:{{ c.color }};width:{{ c.pct }}%"></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px">
+        <sc-for list="{{ match.predChances }}" as="c" hint-placeholder-count="3">
+          <span style="font-family:'Instrument Sans',sans-serif;font-size:11px;letter-spacing:.01em;font-weight:{{ c.legendWeight }};color:{{ c.legendColor }}">{{ c.legendMark }}{{ c.label }} {{ c.pct }}%</span>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+</article>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:452,&quot;height&quot;:640},&quot;match&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;any&quot;}}"></script>
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f1ede4}
+.wc-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,360px));gap:22px;justify-content:start;align-items:stretch}
+.wc-cards > *{height:100%}
+.wc-row:hover{background:#efeadf}
+input::placeholder{color:#b0a99c}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#f1ede4">
+<div style="max-width:1200px;margin:0 auto;padding:0 28px 90px">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header style="padding:42px 0 0">
+    <div onClick="{{ goToday }}" style="cursor:pointer;display:inline-block">
+      <h1 style="margin:0;font:500 33px/1.04 'Newsreader',serif;letter-spacing:-.015em;color:#1c1a17">World Cup <span data-comment-anchor="18b82cfd75-span" style="font-style:italic;font-weight:400;color:#6b6660">for Non-<span style="text-decoration:line-through;text-decoration-color:#8a2b22;text-decoration-thickness:2px;text-underline-offset:2px">Soccer</span> <span style="display:inline-block;transform:rotate(-5deg);font-style:italic;font-weight:600;color:#8a2b22">Football</span> Fans</span></h1>
+    </div>
+    <p data-comment-anchor="acd16b4090-p" style="margin:9px 0 0;font:400 17px 'Newsreader',serif;color:#6b6660">Every game, translated.</p>
+    <div style="height:1px;background:#ddd7ca;margin:22px 0 0"></div>
+
+    <nav data-comment-anchor="a86fb93648-nav" style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:10px 0">
+      <div style="display:flex;align-items:center;gap:24px">
+        <sc-if value="{{ stepper.hasPrev }}" hint-placeholder-val="{{ true }}">
+          <span onClick="{{ prevDay }}" style="cursor:pointer;font:500 13px 'Instrument Sans',sans-serif;letter-spacing:.03em;color:#6b6660;white-space:nowrap" style-hover="color:#8a2b22">‹ {{ stepper.prevLabel }}</span>
+        </sc-if>
+        <div onClick="{{ goToday }}" style="cursor:pointer;text-align:center;min-width:148px;height:38px;display:flex;flex-direction:column;justify-content:center;gap:3px">
+          <div style="font:500 15px 'Newsreader',serif;color:#1c1a17;line-height:1.05">{{ stepper.label }}</div>
+          <div style="font:600 9px 'Instrument Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#8a2b22;line-height:1;min-height:9px">{{ stepper.tag }}</div>
+        </div>
+        <sc-if value="{{ stepper.hasNext }}" hint-placeholder-val="{{ true }}">
+          <span onClick="{{ nextDay }}" style="cursor:pointer;font:500 13px 'Instrument Sans',sans-serif;letter-spacing:.03em;color:#6b6660;white-space:nowrap" style-hover="color:#8a2b22">{{ stepper.nextLabel }} ›</span>
+        </sc-if>
+      </div>
+      <span onClick="{{ goSearch }}" style="cursor:pointer;font:500 13px 'Instrument Sans',sans-serif;letter-spacing:.04em;padding-bottom:2px;color:{{ nav.searchColor }};border-bottom:2px solid {{ nav.searchBorder }};white-space:nowrap">Search by team</span>
+    </nav>
+    <div style="height:1px;background:#ddd7ca"></div>
+  </header>
+
+  <!-- ============ DAY ============ -->
+  <sc-if value="{{ isDay }}" hint-placeholder-val="{{ true }}">
+    <section style="padding-top:30px">
+      <div class="wc-cards">
+        <sc-for list="{{ dayCards }}" as="m" hint-placeholder-count="3">
+          <dc-import name="Match Card" match="{{ m }}" hint-size="100%,600px"></dc-import>
+        </sc-for>
+      </div>
+      <sc-if value="{{ noGames }}" hint-placeholder-val="{{ false }}">
+        <p style="font:400 18px 'Newsreader',serif;color:#9a948a;padding-top:8px">No games scheduled this day.</p>
+      </sc-if>
+    </section>
+  </sc-if>
+
+  <!-- ============ SEARCH ============ -->
+  <sc-if value="{{ isSearch }}" hint-placeholder-val="{{ false }}">
+    <section style="padding-top:34px">
+      <h2 style="margin:0 0 4px;font:500 24px 'Newsreader',serif;color:#1c1a17;letter-spacing:-.01em">Search by team</h2>
+      <p style="margin:0 0 18px;font:400 15px 'Newsreader',serif;color:#8a857d">Pick a country to see where it stands and what its next game means.</p>
+      <input value="{{ query }}" onInput="{{ onSearch }}" placeholder="Type a country — France, USA, Argentina, Iran…" style="width:100%;max-width:620px;display:block;font:400 18px 'Newsreader',serif;color:#1c1a17;background:#f8f6f0;border:1px solid #ddd7ca;padding:14px 16px;outline:none" />
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:36px 48px;margin-top:36px">
+        <sc-for list="{{ searchGroups }}" as="g" hint-placeholder-count="3">
+          <div>
+            <h3 onClick="{{ g.openGroup }}" style="cursor:pointer;margin:0;padding-bottom:11px;border-bottom:1px solid #d3ccbf;font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8a857d" style-hover="color:#8a2b22">{{ g.name }}</h3>
+            <sc-for list="{{ g.teams }}" as="t" hint-placeholder-count="4">
+              <div class="wc-row" onClick="{{ t.open }}" style="cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 8px;border-bottom:1px solid #e6e1d6">
+                <div>
+                  <div style="font:500 21px 'Newsreader',serif;color:#1c1a17">{{ t.name }}</div>
+                  <div style="font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.02em;color:{{ t.nowColor }};margin-top:3px">{{ t.nowText }}</div>
+                </div>
+                <div style="text-align:right;white-space:nowrap;padding-top:3px">
+                  <div style="font:500 15px 'Newsreader',serif;color:#1c1a17">{{ t.pts }} <span style="font-size:11px;color:#9a948a">pts</span></div>
+                  <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.04em;color:{{ t.noteColor }};margin-top:2px">{{ t.note }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+        <p style="font:400 16px 'Newsreader',serif;color:#9a948a;padding:24px 2px">No team by that name in this tournament.</p>
+      </sc-if>
+    </section>
+  </sc-if>
+
+  <!-- ============ GROUP ============ -->
+  <sc-if value="{{ isGroup }}" hint-placeholder-val="{{ false }}">
+    <section style="padding-top:30px">
+      <span onClick="{{ goBack }}" style="cursor:pointer;font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.04em;color:#8a857d" style-hover="color:#8a2b22">← {{ backLabel }}</span>
+      <h2 style="margin:16px 0 0;font:500 30px 'Newsreader',serif;color:#1c1a17;letter-spacing:-.015em">{{ group.name }}</h2>
+      <p style="margin:12px 0 0;font:400 18px/1.5 'Newsreader',serif;color:#3a3631;max-width:660px">{{ group.summary }}</p>
+
+      <div style="height:1px;background:#ddd7ca;margin:28px 0 0"></div>
+      <div style="display:grid;grid-template-columns:24px 1fr auto auto;gap:0 16px;align-items:center;font-family:'Instrument Sans',sans-serif">
+        <div style="grid-column:1 / -1;display:grid;grid-template-columns:subgrid;padding:12px 0 10px;font:500 10px 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#b0a99c;border-bottom:1px solid #e6e1d6">
+          <span>#</span><span>Team</span><span style="text-align:right">GD</span><span style="text-align:right;width:42px">Pts</span>
+        </div>
+        <sc-for list="{{ group.table }}" as="r" hint-placeholder-count="4">
+          <div onClick="{{ r.open }}" style="grid-column:1 / -1;display:grid;grid-template-columns:subgrid;align-items:center;cursor:pointer;padding:14px 0;border-bottom:1px solid #e6e1d6" style-hover="background:#efeadf">
+            <span style="font:500 13px 'Instrument Sans',sans-serif;color:#b0a99c">{{ r.pos }}</span>
+            <span style="display:flex;align-items:baseline;gap:12px"><span style="font:500 19px 'Newsreader',serif;color:#1c1a17">{{ r.name }}</span><span style="font:400 12px 'Instrument Sans',sans-serif;letter-spacing:.02em;color:{{ r.noteColor }}">{{ r.note }}</span></span>
+            <span style="text-align:right;font:400 13px 'Instrument Sans',sans-serif;color:#8a857d">{{ r.gd }}</span>
+            <span style="text-align:right;width:42px;font:500 14px 'Newsreader',serif;color:#1c1a17">{{ r.pts }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <h3 style="margin:34px 0 18px;font:500 13px 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8a857d">Matches</h3>
+      <div class="wc-cards">
+        <sc-for list="{{ group.cards }}" as="m" hint-placeholder-count="3">
+          <dc-import name="Match Card" match="{{ m }}" hint-size="100%,560px"></dc-import>
+        </sc-for>
+      </div>
+    </section>
+  </sc-if>
+
+  <!-- ============ TEAM ============ -->
+  <sc-if value="{{ isTeam }}" hint-placeholder-val="{{ false }}">
+    <section style="padding-top:30px">
+      <span onClick="{{ goBack }}" style="cursor:pointer;font:500 12px 'Instrument Sans',sans-serif;letter-spacing:.04em;color:#8a857d" style-hover="color:#8a2b22">← {{ backLabel }}</span>
+      <div style="display:flex;align-items:baseline;gap:16px;margin-top:16px">
+        <h2 style="margin:0;font:500 38px 'Newsreader',serif;color:#1c1a17;letter-spacing:-.02em">{{ team.name }}</h2>
+        <span onClick="{{ team.openGroup }}" style="cursor:pointer;font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9a948a;border-bottom:1px solid #d3ccbf" style-hover="color:#8a2b22;border-bottom-color:#8a2b22">{{ team.groupName }}</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:48px;margin-top:30px;align-items:start">
+        <div>
+          <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:7px">Current status</div>
+          <p style="margin:0 0 30px;font:400 21px/1.45 'Newsreader',serif;color:#1c1a17">{{ team.status }}</p>
+
+          <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:12px">Past matches</div>
+          <div>
+            <sc-for list="{{ team.past }}" as="p" hint-placeholder-count="2">
+              <div style="padding:13px 0;border-top:1px solid #e6e1d6">
+                <div style="font:500 17px 'Newsreader',serif;color:#1c1a17">{{ p.line }}</div>
+                <div style="font:400 15px/1.45 'Newsreader',serif;color:#6b6660;margin-top:2px">{{ p.note }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div>
+          <div style="font:500 11px 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8a857d;margin-bottom:12px">Next match</div>
+          <sc-if value="{{ team.hasNext }}" hint-placeholder-val="{{ true }}">
+            <dc-import name="Match Card" match="{{ team.nextCard }}" hint-size="100%,640px"></dc-import>
+          </sc-if>
+          <sc-if value="{{ team.noNext }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font:400 17px 'Newsreader',serif;color:#9a948a">No upcoming games — this team's group is finished.</p>
+          </sc-if>
+        </div>
+      </div>
+    </section>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  state = { view: 'day', dayOffset: 0, teamId: null, groupId: null, query: '', prev: 'day' };
+
+  DAY_BASE = new Date(2026, 5, 25); // Thursday, June 25 2026 = offset 0
+  dayDate(off){ const d = new Date(this.DAY_BASE.getTime()); d.setDate(d.getDate() + off); return d; }
+  relName(off){
+    if(off===0) return 'Today';
+    if(off===-1) return 'Yesterday';
+    if(off===1) return 'Tomorrow';
+    return this.dayDate(off).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+  }
+  fullLabel(off){ return this.dayDate(off).toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' }); }
+
+  T = {
+    france:{name:'France',group:'I'}, norway:{name:'Norway',group:'I'},
+    senegal:{name:'Senegal',group:'I'}, iraq:{name:'Iraq',group:'I'},
+    usa:{name:'United States',group:'D'}, turkey:{name:'Turkey',group:'D'},
+    colombia:{name:'Colombia',group:'D'}, ghana:{name:'Ghana',group:'D'},
+    argentina:{name:'Argentina',group:'C'}, portugal:{name:'Portugal',group:'C'},
+    iran:{name:'Iran',group:'C'}, mexico:{name:'Mexico',group:'C'}
+  };
+
+  STATUS = {
+    france:'Already through. Plays Norway today to decide who finishes first in Group I.',
+    norway:'Already through. A win over France today makes Norway first in Group I.',
+    senegal:'Out. Lost both opening games; today\u2019s match no longer affects the group.',
+    iraq:'Out. Can\u2019t reach the next round whatever happens today.',
+    usa:'Already through. Today\u2019s game decides whether the U.S. finishes first or second in Group D.',
+    turkey:'Still alive. A win today would lift Turkey above the U.S. into first place.',
+    colombia:'Already through to the next round; its group games are done.',
+    ghana:'Out of the tournament.',
+    argentina:'Already through. Plays Portugal next to decide first place in Group C.',
+    portugal:'Already through to the next round.',
+    iran:'Out, after losing its first two group games.',
+    mexico:'Needs to win its final game \u2014 and get help \u2014 to stay alive.'
+  };
+
+  GROUPS = {
+    I:{name:'Group I', summary:'France and Norway are both through to the next round. They meet today to decide who finishes first. Senegal and Iraq are out.', table:[
+      {team:'france',pts:6,gd:'+5',note:'Through'},{team:'norway',pts:6,gd:'+3',note:'Through'},
+      {team:'senegal',pts:1,gd:'\u20133',note:'Out'},{team:'iraq',pts:1,gd:'\u20135',note:'Out'}]},
+    D:{name:'Group D', summary:'The U.S. and Colombia are both through. Today decides whether the U.S. or Turkey finishes first. Ghana is out.', table:[
+      {team:'usa',pts:4,gd:'+3',note:'Through'},{team:'colombia',pts:4,gd:'+2',note:'Through'},
+      {team:'turkey',pts:3,gd:'0',note:'Can still take first'},{team:'ghana',pts:0,gd:'\u20135',note:'Out'}]},
+    C:{name:'Group C', summary:'Argentina and Portugal are through. Mexico still has a slim chance; Iran is out.', table:[
+      {team:'argentina',pts:6,gd:'+4',note:'Through'},{team:'portugal',pts:4,gd:'+2',note:'Through'},
+      {team:'mexico',pts:1,gd:'\u20132',note:'Still alive'},{team:'iran',pts:1,gd:'\u20134',note:'Out'}]}
+  };
+
+  // ============================================================================
+  // ADDING THE FULL SCHEDULE
+  // ----------------------------------------------------------------------------
+  // This prototype ships with sample data. To wire in the real tournament:
+  //
+  // 1. DAYS  — every match's `day` is an integer OFFSET from today (DAY_BASE,
+  //            set to the tournament's "today"). 0 = today, -1 = yesterday,
+  //            +1 = tomorrow, -2, +3, etc. The date stepper walks any offset,
+  //            so just give each match its real offset and empty days handle
+  //            themselves ("No games scheduled this day"). Matches with no
+  //            `day` are treated as earlier history (shown only on team/group
+  //            pages, never in a day view).
+  //
+  // 2. GROUPS — add an entry per group to GROUPS (id -> {name, summary, table}).
+  //             table rows are {team, pts, gd, note}. The search directory and
+  //             group pages render every group automatically; for 8-12 groups,
+  //             sort GROUPS alphabetically so the directory reads A->L.
+  //
+  // 3. TEAMS  — add each country to T (id -> {name, group}) and a one-line
+  //             STATUS string. teamNow()/teamPast() derive the rest from MATCHES.
+  //
+  // 4. MATCH  — fields: id, group, state ('upcoming'|'live'|'completed'), day,
+  //             home, away, score{home,away} (live/completed), time (upcoming,
+  //             e.g. '9:00 AM PT'), minute (live), matters, whatChanges /
+  //             whatChanged, why (string OR {pre,term,post,tip} for a hover),
+  //             expected{chances:[{label,pct,kind:'fav'|'draw'|'other'}]} +
+  //             ifNot (upcoming/live), wasExpected + pred:[homeWin%,draw%,awayWin%]
+  //             (completed — drives the "What was predicted" chart; the actual
+  //             result is highlighted automatically from the score).
+  // ============================================================================
+  MATCHES = [
+    // ---- YESTERDAY (Wed Jun 24) ----
+    {id:'fra-irq', group:'I', state:'completed', day:-1, home:'france', away:'iraq', score:{home:3,away:0}, pred:[78,15,7],
+      matters:'Yes.', whatChanged:'France stayed at the top of Group I.',
+      why:{text:'The win kept France level with Norway on points and ahead on goal difference.'}, wasExpected:'Yes — France were clear favorites and won easily.'},
+    {id:'nor-sen', group:'I', state:'completed', day:-1, home:'norway', away:'senegal', score:{home:1,away:0}, pred:[55,27,18],
+      matters:'Yes.', whatChanged:'Pushed Senegal to the edge of elimination.',
+      why:{text:'A narrow win that left Senegal needing other results to go their way.'}, wasExpected:'Yes — Norway were favored, and a one-goal win was the likeliest result.'},
+    {id:'usa-col', group:'D', state:'completed', day:-1, home:'usa', away:'colombia', score:{home:1,away:1}, pred:[45,30,25],
+      matters:'Somewhat.', whatChanged:'Left first place in the group still open.',
+      why:{text:'A draw that all but secured the next round for both teams, but settled nothing about who finishes first.'}, wasExpected:'A draw was the second-likeliest result, so not a real surprise.'},
+
+    // ---- TODAY (Thu Jun 25) ----
+    {id:'nor-fra', group:'I', state:'upcoming', day:0, home:'norway', away:'france', time:'9:00 AM PT',
+      matters:'Yes.', whatChanges:'Who wins Group I.',
+      why:{pre:'France and Norway are level on points. France\u2019s ', term:'goal-difference edge', post:' means a draw wins them the group; Norway must win.', tip:'Goal difference = goals scored minus goals allowed. It\u2019s the first tiebreaker when two teams are level on points.'},
+      expected:{headline:'France is favored.', chances:[{label:'Norway win',pct:22,kind:'other'},{label:'Draw',pct:28,kind:'draw'},{label:'France win',pct:50,kind:'fav'}]},
+      ifNot:{text:'France still advances, but Norway takes first place.'}},
+    {id:'tur-usa', group:'D', state:'live', day:0, home:'turkey', away:'usa', minute:'Live · 62\u2032', score:{home:1,away:1},
+      matters:'Yes.', whatChanges:'Whether the U.S. finishes first in its group.',
+      why:{text:'A win makes the U.S. group winners. A draw or loss can drop them to second \u2014 usually a tougher opponent next round.'},
+      expected:{headline:'The U.S. is favored.', chances:[{label:'Turkey win',pct:20,kind:'other'},{label:'Tie',pct:28,kind:'draw'},{label:'U.S. win',pct:52,kind:'fav'}]},
+      ifNot:{pre:'They\u2019ll ', term:'most likely', post:' still reach the next round \u2014 just as the second-place team, against a stronger opponent.', tip:'A tie still sends the U.S. through. They\u2019d only miss out if another team passes them on points.'}},
+    {id:'sen-irq', group:'I', state:'completed', day:0, home:'senegal', away:'iraq', score:{home:1,away:1}, pred:[40,30,30],
+      matters:'Not really.', whatChanged:'Nothing \u2014 both teams were already out.',
+      why:{text:'Senegal and Iraq each lost their first two games, so neither could reach the next round no matter what happened here.'},
+      wasExpected:'A draw was always likely between two teams with nothing left to play for.'},
+
+    // ---- TOMORROW (Fri Jun 26) ----
+    {id:'arg-por', group:'C', state:'upcoming', day:1, home:'argentina', away:'portugal', time:'12:00 PM PT',
+      matters:'Somewhat.', whatChanges:'Which opponent each team gets in the next round.',
+      why:{text:'Both teams are already through. The winner finishes first and likely draws an easier opponent next round.'},
+      expected:{headline:'Argentina is slightly favored.', chances:[{label:'Argentina win',pct:42,kind:'fav'},{label:'Draw',pct:30,kind:'draw'},{label:'Portugal win',pct:28,kind:'other'}]},
+      ifNot:{text:'Portugal finishes first in Group C instead; both still advance.'}},
+    {id:'mex-irn', group:'C', state:'upcoming', day:1, home:'mexico', away:'iran', time:'12:00 PM PT',
+      matters:'Somewhat.', whatChanges:'Whether Mexico can still reach the next round.',
+      why:{text:'Mexico has to win and hope the other group game goes their way. Iran is already out.'},
+      expected:{headline:'Mexico is favored.', chances:[{label:'Mexico win',pct:55,kind:'fav'},{label:'Draw',pct:25,kind:'draw'},{label:'Iran win',pct:20,kind:'other'}]},
+      ifNot:{pre:'Even with a win, Mexico ', term:'may', post:' still go out \u2014 they also need Portugal to lose to Argentina.', tip:'Mexico can only sneak through by finishing above Portugal, who currently sit second. A Portugal win or draw keeps Portugal safely ahead.'}},
+
+    // ---- EARLIER ROUNDS (history; shown on team & group pages) ----
+    {id:'fra-sen', group:'I', state:'completed', home:'france', away:'senegal', score:{home:2,away:0}, pred:[70,18,12],
+      matters:'Yes.', whatChanged:'France moved to the top of the group.',
+      why:{text:'A comfortable opening win put France level with Norway at the top of Group I.'}, wasExpected:'Yes — France were strong favorites and delivered.'},
+    {id:'nor-irq', group:'I', state:'completed', home:'norway', away:'iraq', score:{home:2,away:0}, pred:[68,20,12],
+      matters:'Yes.', whatChanged:'Kept Norway level with France at the top.',
+      why:{text:'A clean win that matched France\u2019s result and set up today\u2019s decider.'}, wasExpected:'Yes — a comfortable win, just as predicted.'},
+    {id:'usa-gha', group:'D', state:'completed', home:'usa', away:'ghana', score:{home:2,away:0}, pred:[60,25,15],
+      matters:'Yes.', whatChanged:'Put the U.S. in a strong position to advance.',
+      why:{text:'A clean opening win and an early cushion on goal difference.'}, wasExpected:'Yes — the U.S. were favored and won comfortably.'},
+    {id:'tur-gha', group:'D', state:'completed', home:'turkey', away:'ghana', score:{home:2,away:1}, pred:[50,28,22],
+      matters:'Yes.', whatChanged:'Kept Turkey in the hunt for first place.',
+      why:{text:'A win that kept Turkey within reach of the top spot going into the final round.'}, wasExpected:'Turkey were slight favorites and edged a close one.'},
+    {id:'arg-irn', group:'C', state:'completed', home:'argentina', away:'iran', score:{home:3,away:0}, pred:[72,18,10],
+      matters:'Yes.', whatChanged:'Sent Argentina to the top of the group.',
+      why:{text:'A big win that put Argentina firmly top of Group C on goal difference.'}, wasExpected:'Yes — Argentina were heavy favorites and cruised.'},
+    {id:'por-mex', group:'C', state:'completed', home:'portugal', away:'mexico', score:{home:2,away:1}, pred:[48,27,25],
+      matters:'Yes.', whatChanged:'Pushed Mexico to the edge of elimination.',
+      why:{text:'A late winner that left Mexico needing a result in its final game.'}, wasExpected:'Portugal were narrow favorites and won a tight game.'}
+  ];
+
+  tn(id){ return this.T[id] ? this.T[id].name : id; }
+
+  openTeam = (id) => this.setState(s => ({ prev: s.view, view:'team', teamId:id }));
+  openGroup = (id) => this.setState(s => ({ prev: s.view, view:'group', groupId:id }));
+  goBack = () => this.setState(s => ({ view: s.prev || 'day' }));
+  shiftDay = (dir) => this.setState(s => ({ view:'day', dayOffset: s.dayOffset + dir }));
+  prevDay = () => this.shiftDay(-1);
+  nextDay = () => this.shiftDay(1);
+
+  matterColor(v){ return /^Yes/.test(v) ? '#8a2b22' : '#1c1a17'; }
+
+  gloss(g){
+    if(!g) return { noTip:true, hasTip:false, text:'' };
+    if(g.term) return { noTip:false, hasTip:true, pre:g.pre, term:g.term, post:g.post, tip:g.tip };
+    return { noTip:true, hasTip:false, text:g.text };
+  }
+
+  chanceColors(arr){
+    return (arr||[]).map(c => ({
+      label:c.label, pct:c.pct,
+      color: c.kind==='fav' ? '#8a2b22' : c.kind==='draw' ? '#cdc7bb' : '#8c8579',
+      legendColor: c.kind==='fav' ? '#8a2b22' : '#8a857d'
+    }));
+  }
+
+  buildCard(m){
+    const isLive = m.state==='live', isUpcoming = m.state==='upcoming', isCompleted = m.state==='completed';
+    const home = this.tn(m.home), away = this.tn(m.away);
+    let metaTail = '';
+    if(isUpcoming) metaTail = ' · ' + m.time;
+    else if(isCompleted) metaTail = ' · Final';
+    let predChances = [];
+    if(isCompleted && m.pred){
+      const [hp, dp, ap] = m.pred;
+      const actual = m.score.home>m.score.away ? 'home' : (m.score.home<m.score.away ? 'away' : 'draw');
+      const favSide = hp >= ap ? 'home' : 'away'; // red = the favored team, same as the Expected-result charts
+      const items = [
+        { label: home+' win', pct: hp, side:'home', color: favSide==='home' ? '#8a2b22' : '#8c8579' },
+        { label: 'Draw', pct: dp, side:'draw', color: '#cdc7bb' },
+        { label: away+' win', pct: ap, side:'away', color: favSide==='away' ? '#8a2b22' : '#8c8579' }
+      ];
+      predChances = items.map(it => {
+        const hit = it.side===actual; // ✓ + bold marks what actually happened
+        return { label:it.label, pct:it.pct, color: it.color, legendColor: hit ? '#1c1a17' : (it.color==='#8a2b22' ? '#8a2b22' : '#8a857d'), legendWeight: hit ? 700 : 500, legendMark: hit ? '\u2713 ' : '' };
+      });
+    }
+    return {
+      id:m.id, isLive, isUpcoming, isCompleted, notCompleted:(isLive||isUpcoming),
+      hasPred: predChances.length>0, predChances,
+      liveMinute: m.minute || 'Live',
+      homeName:home, awayName:away,
+      homeScore: m.score ? m.score.home : '', awayScore: m.score ? m.score.away : '',
+      scoreStrip: m.score ? (home + ' ' + m.score.home + '\u2003·\u2003' + away + ' ' + m.score.away) : '',
+      hasScore: !!m.score,
+      groupLabel: 'Group ' + m.group, metaTail,
+      matterLabel: isCompleted ? 'Did it matter?' : 'Does it matter?',
+      matters: m.matters, matterColor: this.matterColor(m.matters),
+      changeLabel: isCompleted ? 'What changed?' : 'What changes?',
+      whatChanges: isCompleted ? m.whatChanged : m.whatChanges,
+      whyGloss: this.gloss(m.why),
+      expectedHeadline: m.expected ? m.expected.headline : '',
+      chances: m.expected ? this.chanceColors(m.expected.chances) : [],
+      ifNotGloss: this.gloss(m.ifNot),
+      wasExpected: m.wasExpected || '',
+      openGroup: () => this.openGroup(m.group),
+      openHome: () => this.openTeam(m.home),
+      openAway: () => this.openTeam(m.away)
+    };
+  }
+
+  navStyle(active){ return { color: active ? '#1c1a17' : '#9a948a', border: active ? '#8a2b22' : 'transparent' }; }
+
+  teamNow(id){
+    const opp = (m) => this.tn(m.home===id ? m.away : m.home);
+    const ms = (m) => m.home===id ? m.score.home : m.score.away;
+    const os = (m) => m.home===id ? m.score.away : m.score.home;
+    let m = this.MATCHES.find(x => x.state==='live' && (x.home===id||x.away===id));
+    if(m) return { text: ms(m)+'\u2013'+os(m)+' vs '+opp(m)+' · '+(m.minute||'').replace('Live · ',''), color:'#8a2b22' };
+    m = this.MATCHES.find(x => x.state==='upcoming' && (x.home===id||x.away===id));
+    if(m){ const tag = (m.day===undefined ? 'Next' : this.relName(m.day)); return { text: tag+' · '+m.time+' vs '+opp(m), color:'#9a948a' }; }
+    const comp = this.MATCHES.filter(x => x.state==='completed' && (x.home===id||x.away===id));
+    if(comp.length){
+      const rank = (x) => (x.day===undefined ? -99 : x.day);
+      comp.sort((a,b) => rank(a)-rank(b));
+      m = comp[comp.length-1];
+      const a = ms(m), b = os(m), v = a>b ? 'Won' : (a<b ? 'Lost' : 'Drew');
+      return { text: v+' '+a+'\u2013'+b+' vs '+opp(m), color:'#9a948a' };
+    }
+    return { text:'', color:'#9a948a' };
+  }
+
+  teamPast(id){
+    return this.MATCHES.filter(m => m.state==='completed' && (m.home===id||m.away===id)).map(m => {
+      const isHome = m.home===id, mine = isHome ? m.score.home : m.score.away, opp = isHome ? m.score.away : m.score.home;
+      const oppName = this.tn(isHome ? m.away : m.home);
+      let verb = 'Drew with'; if(mine>opp) verb='Beat'; else if(mine<opp) verb='Lost to';
+      return { line: verb + ' ' + oppName + ' ' + mine + '\u2013' + opp, note: m.whatChanged };
+    });
+  }
+
+  renderVals(){
+    const v = this.state.view;
+    const off = this.state.dayOffset;
+    const nS = this.navStyle(v==='search');
+
+    const stateOrder = { live:0, upcoming:1, completed:2 };
+    const dayCards = this.MATCHES.filter(m => m.day === off)
+      .sort((a,b) => stateOrder[a.state] - stateOrder[b.state])
+      .map(m => this.buildCard(m));
+
+    const out = {
+      goToday: () => this.setState({ view:'day', dayOffset:0 }),
+      goSearch: () => this.setState({ view:'search' }),
+      prevDay: this.prevDay, nextDay: this.nextDay,
+      goBack: this.goBack,
+      isDay: v==='day', isSearch: v==='search', isTeam: v==='team', isGroup: v==='group',
+      nav: { searchColor:nS.color, searchBorder:nS.border },
+      stepper: { label:this.fullLabel(off), tag:(Math.abs(off)<=1 ? this.relName(off) : ''), hasPrev:true, hasNext:true, prevLabel:this.relName(off-1), nextLabel:this.relName(off+1) },
+      backLabel: ({day:'Today',search:'Search',group:'Group',team:'Back'})[this.state.prev] || 'Today',
+      dayCards,
+      noGames: dayCards.length===0,
+      query: this.state.query,
+      onSearch: (e) => this.setState({ query: e.target.value })
+    };
+
+    const q = (this.state.query||'').trim().toLowerCase();
+    const noteColor = (n) => n==='Through' ? '#3a3631' : (n==='Out' ? '#b0a99c' : '#7a6f55');
+    const searchGroups = Object.keys(this.GROUPS).map(gid => {
+      const g = this.GROUPS[gid];
+      const teams = g.table
+        .filter(r => !q || this.tn(r.team).toLowerCase().includes(q))
+        .map(r => { const now = this.teamNow(r.team); return { name:this.tn(r.team), note:r.note, noteColor:noteColor(r.note), pts:r.pts, nowText:now.text, nowColor:now.color, open:() => this.openTeam(r.team) }; });
+      return { id:gid, name:g.name, teams, openGroup:() => this.openGroup(gid) };
+    }).filter(g => g.teams.length>0);
+    out.searchGroups = searchGroups;
+    out.noResults = q.length>0 && searchGroups.length===0;
+
+    if(v==='group'){
+      const g = this.GROUPS[this.state.groupId];
+      if(g){
+        out.group = {
+          name:g.name, summary:g.summary,
+          table: g.table.map((r,i) => ({
+            pos:i+1, name:this.tn(r.team), pts:r.pts, gd:r.gd, note:r.note,
+            noteColor: r.note==='Through' ? '#3a3631' : (r.note==='Out' ? '#b0a99c' : '#7a6f55'),
+            open:() => this.openTeam(r.team)
+          })),
+          cards: this.MATCHES.filter(m => m.group===this.state.groupId).map(m => this.buildCard(m))
+        };
+      }
+    }
+
+    if(v==='team'){
+      const id = this.state.teamId, t = this.T[id];
+      if(t){
+        const next = this.MATCHES.find(m => (m.state==='upcoming'||m.state==='live') && (m.home===id||m.away===id));
+        out.team = {
+          name:t.name, groupName:'Group '+t.group, status:this.STATUS[id]||'',
+          openGroup:() => this.openGroup(t.group),
+          hasNext: !!next, noNext: !next,
+          nextCard: next ? this.buildCard(next) : null,
+          past: this.teamPast(id)
+        };
+      }
+    }
+
+    return out;
+  }
+}
+</script>
+</body>
+</html>
