@@ -77,6 +77,7 @@ function chancesFrom(p: { home: number; draw: number; away: number }, m: Match):
       pct,
       color: side === 'draw' ? DRAW : isFav ? OXBLOOD : OTHER,
       legendColor: isFav ? OXBLOOD : '#8a857d',
+      legendWeight: isFav ? 600 : 500,
     }
   }
   return [

@@ -122,6 +122,67 @@ function strength(ctx: QualContext, id: string): number {
   return r.pts / games + 0.35 * (r.gd / games)
 }
 
+// ---------- scenario maths (R2-4) ----------
+// We only ever assert a *positive* clinch we can prove from points alone, so
+// tiebreakers (goal difference, head-to-head) never enter into it, and we always
+// under-claim: a rival counts as "can still catch us" whenever its maximum
+// reachable points merely *ties* ours. Note: this proves a top-two finish.
+// Finishing third can still qualify via the best-thirds rule, so we never use
+// this to claim a team is *out* — only that a result guarantees them through.
+
+function remainingGamesInGroup(ctx: QualContext, gid?: string): Match[] {
+  if (!gid) return []
+  return ctx.payload.matches.filter((m) => m.group === gid && m.state !== 'completed')
+}
+
+function remGamesFor(ctx: QualContext, gid: string | undefined, teamId: string): number {
+  return remainingGamesInGroup(ctx, gid).filter(
+    (m) => m.homeId === teamId || m.awayId === teamId,
+  ).length
+}
+
+// Does `gain` points (3 for a win, 1 for a draw) from THIS match guarantee that
+// `teamId` finishes in the top two of its group? Conservative — only true when at
+// most one other team can even reach the team's post-result total.
+function resultClinchesTop2(ctx: QualContext, match: Match, teamId: string, gain: number): boolean {
+  const g = match.group ? ctx.groupById.get(match.group) : undefined
+  const me = ctx.rowByTeam.get(teamId)
+  if (!g || !me) return false
+  const target = me.pts + gain // our guaranteed floor after this result
+  const oppId = teamId === match.homeId ? match.awayId : match.homeId
+  const oppGain = gain === 3 ? 0 : gain // if we win the opponent gets 0; if we draw, they draw too
+  let canCatch = 0
+  for (const r of g.table) {
+    if (r.teamId === teamId) continue
+    const otherRem = remGamesFor(ctx, match.group, r.teamId)
+    // this match is settled by our assumed result; the opponent's *other* games stay open
+    const max =
+      r.teamId === oppId
+        ? r.pts + oppGain + 3 * Math.max(0, otherRem - 1)
+        : r.pts + 3 * otherRem
+    if (max >= target) canCatch++
+  }
+  return canCatch <= 1
+}
+
+const winClinches = (ctx: QualContext, m: Match, id: string) => resultClinchesTop2(ctx, m, id, 3)
+const drawClinches = (ctx: QualContext, m: Match, id: string) => resultClinchesTop2(ctx, m, id, 1)
+
+// Teams still in contention in this match's group, excluding the two playing.
+// Safe to name: 'alive' is the engine's own ESPN-anchored status.
+function otherAliveNames(ctx: QualContext, match: Match): string[] {
+  const g = match.group ? ctx.groupById.get(match.group) : undefined
+  if (!g) return []
+  return g.table
+    .filter(
+      (r) =>
+        r.teamId !== match.homeId &&
+        r.teamId !== match.awayId &&
+        statusOf(ctx, r.teamId) === 'alive',
+    )
+    .map((r) => r.name)
+}
+
 // Rounds three numbers to ints summing to exactly 100 (drift onto the largest).
 function to3(home: number, draw: number, away: number) {
   let h = Math.round(home)
@@ -302,10 +363,36 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
     }
   }
   if (bothAlive) {
+    // Spell out who a given result actually sends through, when provable; name the
+    // wider field otherwise. (R2-4)
+    const hD = drawClinches(ctx, match, match.homeId)
+    const hW = hD || winClinches(ctx, match, match.homeId) // a draw clinching implies a win does too
+    const aD = drawClinches(ctx, match, match.awayId)
+    const aW = aD || winClinches(ctx, match, match.awayId)
+    const msg = (d: boolean, w: boolean, name: string): string | null =>
+      d ? `a draw is enough for ${name}` : w ? `a win sends ${name} through` : null
+    const hMsg = msg(hD, hW, home)
+    const aMsg = msg(aD, aW, away)
+    const others = otherAliveNames(ctx, match)
+
+    let whatChanges: string
+    if (hD && aD) {
+      whatChanges = `A draw is enough for both ${home} and ${away} to reach the next round.`
+    } else if (hMsg && aMsg) {
+      whatChanges = capitalize(`${hMsg}; ${aMsg}.`)
+    } else if (hMsg || aMsg) {
+      const chaser = hMsg ? away : home
+      whatChanges = `${capitalize((hMsg ?? aMsg)!)}; ${chaser} are still chasing.`
+    } else if (others.length) {
+      whatChanges = `Who goes through — ${home} and ${away} are both chasing it, with ${list(others)} still in the race too.`
+    } else {
+      whatChanges = `Who goes through — ${home} and ${away} are both fighting for a knockout place.`
+    }
+
     return {
       matters: 'Yes.',
-      whatChanges: `Who goes through from Group ${match.group}.`,
-      why: text(`${home} and ${away} are both still fighting for a knockout place — this result helps decide who takes it.`),
+      whatChanges,
+      why: text(`${home} and ${away} are both still in the hunt in Group ${match.group} — this result helps settle who reaches the knockouts, and in what order.`),
     }
   }
   if (aliveName) {
@@ -313,9 +400,16 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
     const rank = ctx.rowByTeam.get(aliveId)?.rank ?? 3
     if (rank <= 2) {
       // currently in a qualifying place, just not mathematically clinched
+      const d = drawClinches(ctx, match, aliveId)
+      const w = d || winClinches(ctx, match, aliveId)
+      const whatChanges = d
+        ? `${aliveName} reach the knockouts with a point or more.`
+        : w
+          ? `Win and ${aliveName} are through to the knockouts.`
+          : `Whether ${aliveName} confirm their place in the next round.`
       return {
         matters: 'Somewhat.',
-        whatChanges: `Whether ${aliveName} confirm their place in the next round.`,
+        whatChanges,
         why: text(`${aliveName} sit in a qualifying spot and are close to going through — this is about getting it over the line.`),
       }
     }

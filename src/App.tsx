@@ -291,6 +291,49 @@ export function MatchView({ matchId, ctx, backLabel, nav }: { matchId: string; c
   )
 }
 
+// ---------- data freshness (R2-6) ----------
+
+function relTimeAgo(iso: string, nowMs: number): string {
+  const t = new Date(iso).getTime()
+  if (!Number.isFinite(t)) return ''
+  const sec = Math.max(0, Math.round((nowMs - t) / 1000))
+  if (sec < 45) return 'just now'
+  const min = Math.round(sec / 60)
+  if (min < 60) return `${min} min ago`
+  const hr = Math.round(min / 60)
+  if (hr < 24) return `${hr} hr${hr === 1 ? '' : 's'} ago`
+  const d = Math.round(hr / 24)
+  return `${d} day${d === 1 ? '' : 's'} ago`
+}
+
+// "Updated X ago", re-derived as the page polls (and on a local 30s tick so the
+// label keeps climbing when a poll fails). Surfaces the fallback states too.
+function Freshness({ data }: { data: ScoresPayload }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(t)
+  }, [])
+  const rel = relTimeAgo(data.generatedAt, now)
+  const saved = data.stale || data.source === 'cache'
+  const delayed = data.source === 'openfootball'
+  const label = saved
+    ? `Showing saved scores${rel ? ` · last updated ${rel}` : ''}`
+    : delayed
+      ? `Live scores may lag${rel ? ` · updated ${rel}` : ''}`
+      : rel
+        ? `Updated ${rel}`
+        : ''
+  if (!label) return null
+  return (
+    <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 10 }}>
+      <span style={{ font: "400 12.5px 'Newsreader',serif", letterSpacing: '.01em', color: saved || delayed ? '#8a2b22' : '#b0a99c' }}>
+        {label}
+      </span>
+    </div>
+  )
+}
+
 // ---------- app shell ----------
 
 export function App() {
@@ -403,9 +446,7 @@ export function App() {
 
         {ctx && (
           <>
-            {data && data.source !== 'espn' && (
-              <p style={{ font: "400 13px 'Instrument Sans',sans-serif", color: '#b0a99c', paddingTop: 16, margin: 0 }}>Scores may be slightly delayed.</p>
-            )}
+            {data && <Freshness data={data} />}
             {view === 'day' && <DayView off={dayOff} ctx={ctx} nav={nav} />}
             {view === 'search' && <SearchView ctx={ctx} query={query} onQuery={setQuery} nav={nav} />}
             {view === 'group' && groupId && <GroupView groupId={groupId} ctx={ctx} backLabel={backLabel} nav={nav} />}

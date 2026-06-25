@@ -1,13 +1,24 @@
 import type { CSSProperties } from 'react'
 import type { CardVM, Chance, GlossVM } from '../lib/buildCard'
 
+// One typeface — Newsreader. Hierarchy is built from size / weight / caps / color,
+// not a second family. (R2-1)
 const LBL: CSSProperties = {
-  font: "500 11px 'Instrument Sans',sans-serif",
-  letterSpacing: '.12em',
+  font: "600 11px 'Newsreader',serif",
+  letterSpacing: '.13em',
   textTransform: 'uppercase',
   color: '#8a857d',
 }
-const BODY: CSSProperties = { font: "400 16px/1.52 'Newsreader',serif", color: '#3a3631' }
+// State chip (UPCOMING / FINAL) — same caption treatment, a touch darker.
+const STATE: CSSProperties = {
+  font: "600 11px 'Newsreader',serif",
+  letterSpacing: '.13em',
+  textTransform: 'uppercase',
+  color: '#6b6660',
+  marginBottom: 15,
+}
+const BODY: CSSProperties = { font: "400 16px/1.5 'Newsreader',serif", color: '#3a3631' }
+const SECTION = 16 // uniform gap between the three verdict blocks (R2-5)
 
 function GlossLine({ g, style }: { g: GlossVM; style: CSSProperties }) {
   if (g.noTip) return <div style={style}>{g.text}</div>
@@ -23,7 +34,7 @@ function GlossLine({ g, style }: { g: GlossVM; style: CSSProperties }) {
               background: '#1c1a17',
               color: '#f1ede4',
               padding: '11px 13px',
-              font: "400 13px/1.5 'Instrument Sans',sans-serif",
+              font: "400 13px/1.5 'Newsreader',serif",
               boxShadow: '0 8px 22px rgba(0,0,0,.24)',
             }}
           >
@@ -44,13 +55,14 @@ function Bar({ chances }: { chances: Chance[] }) {
           <div key={i} style={{ height: 7, background: c.color, width: `${c.pct}%` }} />
         ))}
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', marginTop: 8 }}>
+      {/* reserve ~2 lines so the bar keeps a fixed offset from the card bottom and
+          the bars line up across a row even when a legend wraps (R2-3) */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', marginTop: 8, minHeight: 34 }}>
         {chances.map((c, i) => (
           <span
             key={i}
             style={{
-              font: "500 11px 'Instrument Sans',sans-serif",
-              letterSpacing: '.01em',
+              font: "500 13px 'Newsreader',serif",
               color: c.legendColor,
               fontWeight: c.legendWeight,
             }}
@@ -97,8 +109,8 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
           />
           <span
             style={{
-              font: "500 10px 'Instrument Sans',sans-serif",
-              letterSpacing: '.2em',
+              font: "600 11px 'Newsreader',serif",
+              letterSpacing: '.14em',
               textTransform: 'uppercase',
               color: '#8a2b22',
             }}
@@ -107,35 +119,11 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
           </span>
         </div>
       )}
-      {card.isUpcoming && (
-        <div
-          style={{
-            font: "500 10px 'Instrument Sans',sans-serif",
-            letterSpacing: '.16em',
-            textTransform: 'uppercase',
-            color: '#6b6660',
-            marginBottom: 15,
-          }}
-        >
-          Upcoming
-        </div>
-      )}
-      {card.isCompleted && (
-        <div
-          style={{
-            font: "500 10px 'Instrument Sans',sans-serif",
-            letterSpacing: '.16em',
-            textTransform: 'uppercase',
-            color: '#6b6660',
-            marginBottom: 15,
-          }}
-        >
-          Final
-        </div>
-      )}
+      {card.isUpcoming && <div style={STATE}>Upcoming</div>}
+      {card.isCompleted && <div style={STATE}>Final</div>}
 
-      {/* matchup + score (fixed height so cards align row-to-row) */}
-      <div style={{ minHeight: 58 }}>
+      {/* matchup + score */}
+      <div>
         <h3
           style={{
             margin: 0,
@@ -174,14 +162,7 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
       </div>
 
       {/* meta: group (clickable) + tail */}
-      <div
-        style={{
-          marginTop: 7,
-          font: "500 12px 'Instrument Sans',sans-serif",
-          letterSpacing: '.05em',
-          color: '#8a857d',
-        }}
-      >
+      <div style={{ marginTop: 7, font: "400 13px 'Newsreader',serif", color: '#8a857d' }}>
         <span
           onClick={(e) => {
             e.stopPropagation()
@@ -199,38 +180,34 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
         {card.metaTail}
       </div>
       {card.venue && (
-        <div style={{ marginTop: 4, font: "400 11.5px 'Instrument Sans',sans-serif", letterSpacing: '.02em', color: '#9a948a' }}>
+        <div style={{ marginTop: 4, font: "italic 400 13px 'Newsreader',serif", color: '#9a948a' }}>
           {card.venue}
         </div>
       )}
 
       <div style={{ height: 1, background: '#e6e1d6', margin: '18px 0 16px' }} />
 
-      {/* does it matter */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 17 }}>
-        <span style={LBL}>{card.matterLabel}</span>
-        <span style={{ font: "600 18px 'Newsreader',serif", color: card.matterColor }}>
-          {card.matters}
-        </span>
+      {/* does it matter (stacked, like the other two — R2-5) */}
+      <div style={{ marginBottom: SECTION }}>
+        <div style={{ ...LBL, marginBottom: 5 }}>{card.matterLabel}</div>
+        <div style={{ font: "600 18px 'Newsreader',serif", color: card.matterColor }}>{card.matters}</div>
       </div>
 
       {/* what changes */}
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: SECTION }}>
         <div style={{ ...LBL, marginBottom: 5 }}>{card.changeLabel}</div>
-        <div style={{ font: "500 19px/1.38 'Newsreader',serif", color: '#1c1a17', minHeight: 54 }}>
-          {card.whatChanges}
-        </div>
+        <div style={{ font: "500 19px/1.38 'Newsreader',serif", color: '#1c1a17' }}>{card.whatChanges}</div>
       </div>
 
       {/* why */}
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: SECTION }}>
         <div style={{ ...LBL, marginBottom: 5 }}>Why?</div>
-        <GlossLine g={card.whyGloss} style={{ ...BODY, minHeight: 76 }} />
+        <GlossLine g={card.whyGloss} style={BODY} />
       </div>
 
-      {/* upcoming / live: expected result */}
+      {/* upcoming / live: expected result — pinned to the bottom so bars align across a row (R2-3) */}
       {card.notCompleted && card.hasChances && (
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ ...LBL, marginBottom: 9 }}>Expected result</div>
           <Bar chances={card.chances} />
         </div>
@@ -238,7 +215,7 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
 
       {/* completed: what was predicted */}
       {card.hasPred && (
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ ...LBL, marginBottom: 9 }}>What was predicted</div>
           <Bar chances={card.predChances} />
         </div>
