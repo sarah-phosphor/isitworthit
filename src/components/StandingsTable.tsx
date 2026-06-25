@@ -1,8 +1,11 @@
 import type { Group } from '../lib/model'
 import type { QualContext } from '../lib/qualification'
+import { isoForTeam } from '../lib/flags'
+import { Flag } from './Flag'
 
 // The grouped A–L standings grid. Shared by the group page and the match page.
 // One typeface — Newsreader — to match the cards (R2-1); hierarchy via size/weight/color.
+// Flags carry the color; status stays plain text; eliminated rows fade back (R3).
 export function StandingsTable({
   group,
   ctx,
@@ -22,15 +25,17 @@ export function StandingsTable({
       </div>
       {group.table.map((r) => {
         const st = ctx.status.get(r.teamId)
+        const out = st?.status === 'out'
         return (
           <div
             key={r.teamId}
             onClick={() => onOpenTeam(r.teamId)}
             className="gr-row"
-            style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'subgrid', alignItems: 'center', cursor: 'pointer', padding: '14px 0', borderBottom: '1px solid #e6e1d6' }}
+            style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'subgrid', alignItems: 'center', cursor: 'pointer', padding: '14px 0', borderBottom: '1px solid #e6e1d6', opacity: out ? 0.55 : 1 }}
           >
             <span style={{ font: "500 13px 'Newsreader',serif", color: '#b0a99c' }}>{r.rank}</span>
-            <span style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+              <Flag iso={isoForTeam(ctx.payload.teams[r.teamId])} h={18} />
               <span style={{ font: "500 19px 'Newsreader',serif", color: '#1c1a17' }}>{r.name}</span>
               <span style={{ font: "400 13px 'Newsreader',serif", color: st?.tone }}>{st?.note}</span>
             </span>

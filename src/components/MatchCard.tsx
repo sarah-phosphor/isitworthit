@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { CardVM, Chance, GlossVM } from '../lib/buildCard'
+import { Flag } from './Flag'
 
 // One typeface — Newsreader. Hierarchy is built from size / weight / caps / color,
 // not a second family. (R2-1)
@@ -132,6 +133,7 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
             color: '#1c1a17',
           }}
         >
+          <Flag iso={card.homeIso} h={19} style={{ marginRight: 9 }} />
           <span
             onClick={(e) => {
               e.stopPropagation()
@@ -143,6 +145,7 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
             {card.homeName}
           </span>
           <span style={{ fontStyle: 'italic', fontWeight: 400, color: '#b0a99c' }}> vs </span>
+          <Flag iso={card.awayIso} h={19} style={{ marginRight: 9 }} />
           <span
             onClick={(e) => {
               e.stopPropagation()
@@ -205,19 +208,12 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
         <GlossLine g={card.whyGloss} style={BODY} />
       </div>
 
-      {/* upcoming / live: expected result — pinned to the bottom so bars align across a row (R2-3) */}
-      {card.notCompleted && card.hasChances && (
+      {/* expected result — shown on every state incl. completed (R3-3); pinned to
+          the bottom so bars align across a row (R2-3) */}
+      {card.hasChances && (
         <div style={{ marginTop: 'auto' }}>
           <div style={{ ...LBL, marginBottom: 9 }}>Expected result</div>
           <Bar chances={card.chances} />
-        </div>
-      )}
-
-      {/* completed: what was predicted */}
-      {card.hasPred && (
-        <div style={{ marginTop: 'auto' }}>
-          <div style={{ ...LBL, marginBottom: 9 }}>What was predicted</div>
-          <Bar chances={card.predChances} />
         </div>
       )}
     </article>

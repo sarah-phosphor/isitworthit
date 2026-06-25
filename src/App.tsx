@@ -5,8 +5,10 @@ import { buildCard } from './lib/buildCard'
 import { buildContext, groupSummary, teamStatusLine, type QualContext } from './lib/qualification'
 import { dateKey, dayOffset, fullLabel, offsetForKey, relName } from './lib/dates'
 import { slugify, teamMatchesQuery } from './lib/search'
+import { isoForTeam } from './lib/flags'
 import { MatchCard } from './components/MatchCard'
 import { StandingsTable } from './components/StandingsTable'
+import { Flag } from './components/Flag'
 
 type View = 'day' | 'search' | 'group' | 'team' | 'match'
 
@@ -59,7 +61,7 @@ function BackLink({ label, onBack }: { label: string; onBack: () => void }) {
 
 // ---------- masthead ----------
 
-function Masthead({ showStepper, off, searchActive, nav }: { showStepper: boolean; off: number; searchActive: boolean; nav: Nav }) {
+function Masthead({ showStepper, off, searchActive, nav, data }: { showStepper: boolean; off: number; searchActive: boolean; nav: Nav; data: ScoresPayload | null }) {
   const stepLink = {
     cursor: 'pointer',
     font: "500 13px 'Instrument Sans',sans-serif",
@@ -81,11 +83,15 @@ function Masthead({ showStepper, off, searchActive, nav }: { showStepper: boolea
         </h1>
       </div>
       <p style={{ margin: '9px 0 0', font: "400 17px 'Newsreader',serif", color: '#6b6660' }}>Every game, translated.</p>
-      <div style={{ height: 1, background: '#ddd7ca', margin: '22px 0 0' }} />
+      <div style={{ height: 1, background: '#ddd7ca', margin: '14px 0 0' }} />
 
-      <nav style={{ display: 'flex', justifyContent: showStepper ? 'space-between' : 'flex-end', alignItems: 'center', gap: 20, padding: '10px 0' }}>
+      {/* balanced three-part bar: freshness left · day stepper centered · search right (R3-5) */}
+      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '7px 0' }}>
+        <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', justifyContent: 'flex-start' }}>
+          {data && <Freshness data={data} />}
+        </div>
         {showStepper && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 24 }}>
             <span onClick={nav.prevDay} className="lk" style={stepLink}>‹ {relName(off - 1)}</span>
             <div onClick={nav.goToday} style={{ cursor: 'pointer', textAlign: 'center', minWidth: 148, height: 38, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
               <div style={{ font: "500 15px 'Newsreader',serif", color: '#1c1a17', lineHeight: 1.05 }}>{fullLabel(off)}</div>
@@ -96,12 +102,14 @@ function Masthead({ showStepper, off, searchActive, nav }: { showStepper: boolea
             <span onClick={nav.nextDay} className="lk" style={stepLink}>{relName(off + 1)} ›</span>
           </div>
         )}
-        <span
-          onClick={nav.goSearch}
-          style={{ cursor: 'pointer', font: "500 13px 'Instrument Sans',sans-serif", letterSpacing: '.04em', paddingBottom: 2, color: searchActive ? '#1c1a17' : '#9a948a', borderBottom: `2px solid ${searchActive ? '#8a2b22' : 'transparent'}`, whiteSpace: 'nowrap' }}
-        >
-          Search by team
-        </span>
+        <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>
+          <span
+            onClick={nav.goSearch}
+            style={{ cursor: 'pointer', font: "500 13px 'Instrument Sans',sans-serif", letterSpacing: '.04em', paddingBottom: 2, color: searchActive ? '#1c1a17' : '#9a948a', borderBottom: `2px solid ${searchActive ? '#8a2b22' : 'transparent'}`, whiteSpace: 'nowrap' }}
+          >
+            Search by team
+          </span>
+        </div>
       </nav>
       <div style={{ height: 1, background: '#ddd7ca' }} />
     </header>
@@ -138,6 +146,7 @@ export function SearchView({ ctx, query, onQuery, nav }: { ctx: QualContext; que
 
   return (
     <section style={{ paddingTop: 34 }}>
+      <BackLink label="Today" onBack={nav.goToday} />
       <h2 style={{ margin: '0 0 4px', font: "500 24px 'Newsreader',serif", color: '#1c1a17', letterSpacing: '-.01em' }}>Search by team</h2>
       <p style={{ margin: '0 0 18px', font: "400 15px 'Newsreader',serif", color: '#8a857d' }}>Pick a country to see where it stands and what its next game means.</p>
       <input
@@ -152,20 +161,24 @@ export function SearchView({ ctx, query, onQuery, nav }: { ctx: QualContext; que
             <h3
               onClick={() => nav.openGroup(g.id)}
               className="lk"
-              style={{ cursor: 'pointer', margin: 0, paddingBottom: 11, borderBottom: '1px solid #d3ccbf', font: "500 12px 'Instrument Sans',sans-serif", letterSpacing: '.14em', textTransform: 'uppercase', color: '#8a857d' }}
+              style={{ cursor: 'pointer', margin: 0, paddingBottom: 9, borderBottom: '2px solid #c9c1b2', font: "600 16px 'Newsreader',serif", letterSpacing: '.1em', textTransform: 'uppercase', color: '#1c1a17' }}
             >
               {g.name}
             </h3>
             {teams.map((r) => {
               const st = ctx.status.get(r.teamId)
+              const out = st?.status === 'out'
               return (
                 <div
                   key={r.teamId}
                   className="wc-row"
                   onClick={() => nav.openTeam(r.teamId)}
-                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '13px 8px', borderBottom: '1px solid #e6e1d6' }}
+                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '13px 8px', borderBottom: '1px solid #e6e1d6', opacity: out ? 0.55 : 1 }}
                 >
-                  <div style={{ font: "500 21px 'Newsreader',serif", color: '#1c1a17' }}>{r.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
+                    <Flag iso={isoForTeam(ctx.payload.teams[r.teamId])} h={18} />
+                    <span style={{ font: "500 19px 'Newsreader',serif", color: '#1c1a17' }}>{r.name}</span>
+                  </div>
                   <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                     <div style={{ font: "500 15px 'Newsreader',serif", color: '#1c1a17' }}>
                       {r.pts} <span style={{ fontSize: 11, color: '#9a948a' }}>pts</span>
@@ -223,13 +236,16 @@ export function TeamView({ teamId, ctx, backLabel, nav }: { teamId: string; ctx:
   return (
     <section style={{ paddingTop: 34 }}>
       <BackLink label={backLabel} onBack={nav.goBack} />
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-        <h2 style={{ margin: 0, font: "500 40px 'Newsreader',serif", color: '#1c1a17', letterSpacing: '-.02em' }}>{team.name}</h2>
-        {team.group && (
-          <span onClick={() => nav.openGroup(team.group!)} className="lkb" style={{ cursor: 'pointer', font: "500 11px 'Instrument Sans',sans-serif", letterSpacing: '.08em', textTransform: 'uppercase', color: '#9a948a', borderBottom: '1px solid #d3ccbf' }}>
-            Group {team.group}
-          </span>
-        )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <Flag iso={isoForTeam(team)} h={30} />
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
+          <h2 style={{ margin: 0, font: "500 40px 'Newsreader',serif", color: '#1c1a17', letterSpacing: '-.02em' }}>{team.name}</h2>
+          {team.group && (
+            <span onClick={() => nav.openGroup(team.group!)} className="lkb" style={{ cursor: 'pointer', font: "500 11px 'Instrument Sans',sans-serif", letterSpacing: '.08em', textTransform: 'uppercase', color: '#9a948a', borderBottom: '1px solid #d3ccbf' }}>
+              Group {team.group}
+            </span>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.05fr 1fr', gap: 48, marginTop: 32, alignItems: 'start' }}>
@@ -325,12 +341,11 @@ function Freshness({ data }: { data: ScoresPayload }) {
         ? `Updated ${rel}`
         : ''
   if (!label) return null
+  // lives in the masthead nav-left now (R3-5); darker than before so it reads (R3-6)
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 10 }}>
-      <span style={{ font: "400 12.5px 'Newsreader',serif", letterSpacing: '.01em', color: saved || delayed ? '#8a2b22' : '#b0a99c' }}>
-        {label}
-      </span>
-    </div>
+    <span style={{ font: "400 12.5px 'Newsreader',serif", letterSpacing: '.01em', whiteSpace: 'nowrap', color: saved || delayed ? '#8a2b22' : '#8a857d' }}>
+      {label}
+    </span>
   )
 }
 
@@ -437,7 +452,7 @@ export function App() {
   return (
     <div style={{ minHeight: '100vh', background: '#f1ede4' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 28px 90px' }}>
-        <Masthead showStepper={view === 'day'} off={dayOff} searchActive={view === 'search'} nav={nav} />
+        <Masthead showStepper={view === 'day'} off={dayOff} searchActive={view === 'search'} nav={nav} data={data} />
 
         {!ctx && loading && <p style={{ font: "400 18px 'Newsreader',serif", color: '#9a948a', paddingTop: 30 }}>Loading today’s games…</p>}
         {!ctx && !loading && error && (
@@ -446,7 +461,6 @@ export function App() {
 
         {ctx && (
           <>
-            {data && <Freshness data={data} />}
             {view === 'day' && <DayView off={dayOff} ctx={ctx} nav={nav} />}
             {view === 'search' && <SearchView ctx={ctx} query={query} onQuery={setQuery} nav={nav} />}
             {view === 'group' && groupId && <GroupView groupId={groupId} ctx={ctx} backLabel={backLabel} nav={nav} />}

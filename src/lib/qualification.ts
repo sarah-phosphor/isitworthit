@@ -275,15 +275,15 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
         whatChanges: w ? `${w} went through; ${w === home ? away : home} are out.` : 'It was settled after 90 minutes.',
         why: text(
           w
-            ? `A knockout tie — ${w} advance and ${w === home ? away : home} go home.`
-            : 'A knockout tie, level after 90 minutes and decided in extra time or penalties.',
+            ? `${w} advance. ${w === home ? away : home} go home.`
+            : 'Level after 90. Decided in extra time or penalties.',
         ),
       }
     }
     return {
       matters: 'Yes.',
       whatChanges: 'Everything — the winner goes through, the loser is out.',
-      why: tip('It’s a ', 'knockout', ' game, so there’s no safety net.', 'knockout'),
+      why: tip('', 'Knockout', ' game. No safety net.', 'knockout'),
     }
   }
 
@@ -309,19 +309,14 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
 
     let why: Gloss
     if (bothOut) {
-      why = text('Both teams had already missed out on the knockout rounds.')
+      why = text('Both already missed the knockouts.')
     } else if (levelOnPoints(ctx, match) && complete) {
-      why = tip(
-        `${w ?? 'The result'} came down to `,
-        'goal difference',
-        ' once the points were level.',
-        'goalDifference',
-      )
+      why = tip('Level on points. ', 'Goal difference', ' settled it.', 'goalDifference')
     } else {
       why = text(
         w
-          ? `${possessive(w)} win ${complete ? 'settled' : 'shaped'} where the group ended up.`
-          : `The draw ${complete ? 'settled' : 'shaped'} the final group order.`,
+          ? `${possessive(w)} win ${complete ? 'settled' : 'shaped'} the group.`
+          : `Draw ${complete ? 'settled' : 'shaped'} the order.`,
       )
     }
     return { matters, whatChanges, why }
@@ -332,14 +327,14 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
     return {
       matters: 'Not really.',
       whatChanges: 'Nothing — both teams are already out.',
-      why: text(`Neither ${home} nor ${away} can reach the knockout rounds, so the result won’t change the group.`),
+      why: text(`Neither ${home} nor ${away} can reach the knockouts.`),
     }
   }
   if (oneThroughOneOut) {
     return {
       matters: 'Not really.',
       whatChanges: `Not much — ${throughName} are through and ${outName} are out.`,
-      why: text(`${throughName} have already qualified; ${outName} have already been eliminated.`),
+      why: text(`${throughName} qualified. ${outName} eliminated.`),
     }
   }
   if (bothThrough) {
@@ -348,18 +343,8 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
       matters: 'Somewhat.',
       whatChanges: decides ? `Who finishes first in Group ${match.group}.` : `Final seeding in Group ${match.group}.`,
       why: levelOnPoints(ctx, match)
-        ? tip(
-            'Both are already through and level on points, so ',
-            'goal difference',
-            ' and this result decide who finishes first — and first place usually means an easier draw next round.',
-            'goalDifference',
-          )
-        : tip(
-            'Both are already through. The winner finishes first — and that usually means an ',
-            'easier opponent',
-            ' in the next round.',
-            'seeding',
-          ),
+        ? tip('Both already through. ', 'Goal difference', ' settles order.', 'goalDifference')
+        : tip('Both already through. Winner takes the ', 'easier draw', '.', 'seeding'),
     }
   }
   if (bothAlive) {
@@ -392,7 +377,7 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
     return {
       matters: 'Yes.',
       whatChanges,
-      why: text(`${home} and ${away} are both still in the hunt in Group ${match.group} — this result helps settle who reaches the knockouts, and in what order.`),
+      why: text(`${home} and ${away} both fighting to go through.`),
     }
   }
   if (aliveName) {
@@ -410,27 +395,27 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
       return {
         matters: 'Somewhat.',
         whatChanges,
-        why: text(`${aliveName} sit in a qualifying spot and are close to going through — this is about getting it over the line.`),
+        why: text(`${aliveName} sit in a qualifying spot. Not safe yet.`),
       }
     }
     if (rank === 3) {
       return {
         matters: 'Yes.',
         whatChanges: `Whether ${aliveName} can still reach the knockout rounds.`,
-        why: text(`${aliveName} need a result here to keep their hopes of going through alive.`),
+        why: text(`${aliveName} need a result to stay alive.`),
       }
     }
     return {
       matters: 'Yes.',
       whatChanges: `Whether ${aliveName} can still sneak through.`,
-      why: text(`${aliveName} need a big win, and other results to go their way, to reach the knockouts.`),
+      why: text(`${aliveName} need a big win and other results to fall their way.`),
     }
   }
   // early / not-yet-resolved group
   return {
     matters: 'Yes.',
     whatChanges: 'Points toward reaching the knockout rounds.',
-    why: text(`${home} and ${away} are both still chasing a place in the next round.`),
+    why: text('Early days. Both still chasing a place.'),
   }
 }
 

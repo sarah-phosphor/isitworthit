@@ -5,6 +5,7 @@ import type { Gloss, Match } from './model'
 import { editorialFor, formProbabilities, type QualContext } from './qualification'
 import { applyOverride } from './overrides'
 import { timeLabel } from './dates'
+import { isoForTeam } from './flags'
 
 export interface Chance {
   label: string
@@ -30,10 +31,11 @@ export interface CardVM {
   isLive: boolean
   isUpcoming: boolean
   isCompleted: boolean
-  notCompleted: boolean
   liveMinute: string
   homeName: string
   awayName: string
+  homeIso?: string
+  awayIso?: string
   homeClickable: boolean
   awayClickable: boolean
   hasScore: boolean
@@ -50,8 +52,6 @@ export interface CardVM {
   venue: string
   hasChances: boolean
   chances: Chance[]
-  hasPred: boolean
-  predChances: Chance[]
   openHome: () => void
   openAway: () => void
   openGroup: () => void
@@ -87,31 +87,6 @@ function chancesFrom(p: { home: number; draw: number; away: number }, m: Match):
   ]
 }
 
-// Completed "What was predicted": same bar, with a ✓ + bold on what actually happened.
-function predFromOdds(m: Match): Chance[] {
-  const o = m.odds
-  const s = m.score
-  if (!o || !s) return []
-  const favIsHome = o.home >= o.away
-  const actual = s.home > s.away ? 'home' : s.home < s.away ? 'away' : 'draw'
-  const items: Array<{ label: string; pct: number; side: 'home' | 'draw' | 'away'; color: string }> = [
-    { label: `${m.home} win`, pct: o.home, side: 'home', color: favIsHome ? OXBLOOD : OTHER },
-    { label: 'Draw', pct: o.draw, side: 'draw', color: DRAW },
-    { label: `${m.away} win`, pct: o.away, side: 'away', color: !favIsHome ? OXBLOOD : OTHER },
-  ]
-  return items.map((it) => {
-    const hit = it.side === actual
-    return {
-      label: it.label,
-      pct: it.pct,
-      color: it.color,
-      legendColor: hit ? '#1c1a17' : it.color === OXBLOOD ? OXBLOOD : '#8a857d',
-      legendWeight: hit ? 700 : 500,
-      legendMark: hit ? '✓ ' : '',
-    }
-  })
-}
-
 export function buildCard(
   match: Match,
   ctx: QualContext,
@@ -124,9 +99,10 @@ export function buildCard(
   const home = match.home
   const away = match.away
 
+  // Expected-result bar on every state now, incl. completed (R3-3): pre-match
+  // odds when ESPN has them, else the form-based estimate — same as upcoming.
   const probs = match.odds ?? formProbabilities(ctx, match)
-  const chances = isLive || isUpcoming ? chancesFrom(probs, match) : []
-  const predChances = isCompleted ? predFromOdds(match) : []
+  const chances = chancesFrom(probs, match)
 
   let metaTail = ''
   if (isUpcoming) metaTail = ' · ' + timeLabel(match.dateISO)
@@ -140,10 +116,11 @@ export function buildCard(
     isLive,
     isUpcoming,
     isCompleted,
-    notCompleted: isLive || isUpcoming,
     liveMinute: match.minute ? `Live · ${match.minute}` : 'Live',
     homeName: home,
     awayName: away,
+    homeIso: isoForTeam(ctx.payload.teams[match.homeId]),
+    awayIso: isoForTeam(ctx.payload.teams[match.awayId]),
     homeClickable,
     awayClickable,
     hasScore: !!match.score,
@@ -162,8 +139,6 @@ export function buildCard(
     whyGloss: gloss(e.why),
     hasChances: chances.length > 0,
     chances,
-    hasPred: predChances.length > 0,
-    predChances,
     openHome: () => homeClickable && nav.openTeam(match.homeId),
     openAway: () => awayClickable && nav.openTeam(match.awayId),
     openGroup: () => match.group && nav.openGroup(match.group),
