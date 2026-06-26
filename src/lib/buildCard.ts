@@ -13,7 +13,6 @@ export interface Chance {
   color: string
   legendColor: string
   legendWeight?: number
-  legendMark?: string
 }
 
 export interface GlossVM {
@@ -80,10 +79,11 @@ function chancesFrom(p: { home: number; draw: number; away: number }, m: Match):
       legendWeight: isFav ? 600 : 500,
     }
   }
+  // labels are bare names (no "win") so the legend fits one line (C2)
   return [
-    seg(`${m.home} win`, p.home, 'home'),
+    seg(m.home, p.home, 'home'),
     seg('Draw', p.draw, 'draw'),
-    seg(`${m.away} win`, p.away, 'away'),
+    seg(m.away, p.away, 'away'),
   ]
 }
 

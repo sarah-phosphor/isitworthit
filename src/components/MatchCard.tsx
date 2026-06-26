@@ -56,20 +56,15 @@ function Bar({ chances }: { chances: Chance[] }) {
           <div key={i} style={{ height: 7, background: c.color, width: `${c.pct}%` }} />
         ))}
       </div>
-      {/* reserve ~2 lines so the bar keeps a fixed offset from the card bottom and
-          the bars line up across a row even when a legend wraps (R2-3) */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', marginTop: 8, minHeight: 34 }}>
+      {/* single line, never wraps (C2) — favored stays bold/oxblood. One line
+          means every legend is the same height, so bars still align across a row. */}
+      <div style={{ marginTop: 8, whiteSpace: 'nowrap', font: "500 12px 'Newsreader',serif" }}>
         {chances.map((c, i) => (
-          <span
-            key={i}
-            style={{
-              font: "500 13px 'Newsreader',serif",
-              color: c.legendColor,
-              fontWeight: c.legendWeight,
-            }}
-          >
-            {c.legendMark}
-            {c.label} {c.pct}%
+          <span key={i}>
+            {i > 0 && <span style={{ color: '#c4bcad', fontWeight: 400, margin: '0 5px' }}>·</span>}
+            <span style={{ color: c.legendColor, fontWeight: c.legendWeight }}>
+              {c.label} {c.pct}%
+            </span>
           </span>
         ))}
       </div>
@@ -78,6 +73,11 @@ function Bar({ chances }: { chances: Chance[] }) {
 }
 
 export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMatch?: boolean }) {
+  // size the title to fit one line at the card width — shrink as the pairing gets
+  // longer, clamped to a readable range; the flag scales with it (C3)
+  const nameLen = card.homeName.length + card.awayName.length
+  const titleSize = Math.max(19, Math.min(27, Math.floor(470 / (nameLen + 4))))
+  const flagH = Math.round(titleSize * 0.72)
   return (
     <article
       onClick={linkToMatch ? card.openMatch : undefined}
@@ -128,33 +128,39 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
         <h3
           style={{
             margin: 0,
-            font: "500 27px/1.12 'Newsreader',serif",
+            font: `500 ${titleSize}px/1.14 'Newsreader',serif`,
             letterSpacing: '-.01em',
             color: '#1c1a17',
           }}
         >
-          <Flag iso={card.homeIso} h={19} style={{ marginRight: 9 }} />
-          <span
-            onClick={(e) => {
-              e.stopPropagation()
-              card.openHome()
-            }}
-            className={card.homeClickable ? 'lk' : undefined}
-            style={{ cursor: card.homeClickable ? 'pointer' : 'default' }}
-          >
-            {card.homeName}
-          </span>
-          <span style={{ fontStyle: 'italic', fontWeight: 400, color: '#b0a99c' }}> vs </span>
-          <Flag iso={card.awayIso} h={19} style={{ marginRight: 9 }} />
-          <span
-            onClick={(e) => {
-              e.stopPropagation()
-              card.openAway()
-            }}
-            className={card.awayClickable ? 'lk' : undefined}
-            style={{ cursor: card.awayClickable ? 'pointer' : 'default' }}
-          >
-            {card.awayName}
+          {/* each "[flag] Team" is a nowrap unit; "vs" sticks to the home team, so a
+              long title breaks only cleanly between the two sides (C3) */}
+          <span style={{ whiteSpace: 'nowrap' }}>
+            <Flag iso={card.homeIso} h={flagH} style={{ marginRight: 9 }} />
+            <span
+              onClick={(e) => {
+                e.stopPropagation()
+                card.openHome()
+              }}
+              className={card.homeClickable ? 'lk' : undefined}
+              style={{ cursor: card.homeClickable ? 'pointer' : 'default' }}
+            >
+              {card.homeName}
+            </span>
+            <span style={{ fontStyle: 'italic', fontWeight: 400, color: '#b0a99c' }}> vs</span>
+          </span>{' '}
+          <span style={{ whiteSpace: 'nowrap' }}>
+            <Flag iso={card.awayIso} h={flagH} style={{ marginRight: 9 }} />
+            <span
+              onClick={(e) => {
+                e.stopPropagation()
+                card.openAway()
+              }}
+              className={card.awayClickable ? 'lk' : undefined}
+              style={{ cursor: card.awayClickable ? 'pointer' : 'default' }}
+            >
+              {card.awayName}
+            </span>
           </span>
         </h3>
         {card.hasScore && (

@@ -343,13 +343,14 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
       matters: 'Somewhat.',
       whatChanges: decides ? `Who finishes first in Group ${match.group}.` : `Final seeding in Group ${match.group}.`,
       why: levelOnPoints(ctx, match)
-        ? tip('Both already through. ', 'Goal difference', ' settles order.', 'goalDifference')
+        ? tip('Both already through, level on points. ', 'Goal difference', ' decides who gets the easier draw.', 'goalDifference')
         : tip('Both already through. Winner takes the ', 'easier draw', '.', 'seeding'),
     }
   }
   if (bothAlive) {
-    // Spell out who a given result actually sends through, when provable; name the
-    // wider field otherwise. (R2-4)
+    // Clean headline in whatChanges; the concrete, provable scenario carries the
+    // WHY (C1). Reuse the points-only clinch logic — still under-claims, never
+    // asserts a result that isn't mathematically forced.
     const hD = drawClinches(ctx, match, match.homeId)
     const hW = hD || winClinches(ctx, match, match.homeId) // a draw clinching implies a win does too
     const aD = drawClinches(ctx, match, match.awayId)
@@ -360,24 +361,24 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
     const aMsg = msg(aD, aW, away)
     const others = otherAliveNames(ctx, match)
 
-    let whatChanges: string
+    let why: Gloss
     if (hD && aD) {
-      whatChanges = `A draw is enough for both ${home} and ${away} to reach the next round.`
+      why = text(`A draw sends both ${home} and ${away} through.`)
     } else if (hMsg && aMsg) {
-      whatChanges = capitalize(`${hMsg}; ${aMsg}.`)
+      why = text(`${capitalize(hMsg)}. ${capitalize(aMsg)}.`)
     } else if (hMsg || aMsg) {
       const chaser = hMsg ? away : home
-      whatChanges = `${capitalize((hMsg ?? aMsg)!)}; ${chaser} are still chasing.`
+      why = text(`${capitalize((hMsg ?? aMsg)!)}. ${chaser} need a result of their own.`)
     } else if (others.length) {
-      whatChanges = `Who goes through — ${home} and ${away} are both chasing it, with ${list(others)} still in the race too.`
+      why = text(`${list([home, away, ...others])} are all chasing the spots.`)
     } else {
-      whatChanges = `Who goes through — ${home} and ${away} are both fighting for a knockout place.`
+      why = text(`A straight fight between ${home} and ${away}.`)
     }
 
     return {
       matters: 'Yes.',
-      whatChanges,
-      why: text(`${home} and ${away} both fighting to go through.`),
+      whatChanges: hD && aD ? `Who tops Group ${match.group}.` : `Who goes through from Group ${match.group}.`,
+      why,
     }
   }
   if (aliveName) {
@@ -387,15 +388,15 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
       // currently in a qualifying place, just not mathematically clinched
       const d = drawClinches(ctx, match, aliveId)
       const w = d || winClinches(ctx, match, aliveId)
-      const whatChanges = d
-        ? `${aliveName} reach the knockouts with a point or more.`
+      const why = d
+        ? text(`A draw is enough for ${aliveName}.`)
         : w
-          ? `Win and ${aliveName} are through to the knockouts.`
-          : `Whether ${aliveName} confirm their place in the next round.`
+          ? text(`A win sends ${aliveName} through.`)
+          : text(`${aliveName} sit in a qualifying spot. Not safe yet.`)
       return {
         matters: 'Somewhat.',
-        whatChanges,
-        why: text(`${aliveName} sit in a qualifying spot. Not safe yet.`),
+        whatChanges: `Whether ${aliveName} go through.`,
+        why,
       }
     }
     if (rank === 3) {

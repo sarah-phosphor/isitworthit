@@ -31,6 +31,14 @@ function changesFor(p: ScoresPayload, matchId: string): string {
   return editorialFor(m, ctx).whatChanges
 }
 
+// The concrete scenario now lives in the WHY (C1); flatten it (text or glossed).
+function whyFor(p: ScoresPayload, matchId: string): string {
+  const ctx = buildContext(p)
+  const m = p.matches.find((x) => x.id === matchId)!
+  const g = editorialFor(m, ctx).why
+  return g.text ?? `${g.pre ?? ''}${g.term ?? ''}${g.post ?? ''}`
+}
+
 function expect(label: string, got: string, wantSubstr: string[]) {
   const missing = wantSubstr.filter((s) => !got.includes(s))
   if (missing.length) {
@@ -57,7 +65,8 @@ function expectNot(label: string, got: string, banned: string[]) {
     upcoming('A', 'A', 'B', 1),
     upcoming('A', 'C', 'D', 2),
   ])
-  expect('1. win-or-bust decider (A vs B)', changesFor(p, 'A1'), ['win sends A through', 'win sends B through'])
+  expect('1. win-or-bust decider — scenario in WHY', whyFor(p, 'A1'), ['win sends A through', 'win sends B through'])
+  expect('1b. clean headline', changesFor(p, 'A1'), ['Who goes through'])
 }
 
 // CASE 2 — A on 6 & B on 4 meet last; both are safe with a draw.
@@ -66,7 +75,8 @@ function expectNot(label: string, got: string, banned: string[]) {
     upcoming('B', 'A', 'B', 1),
     upcoming('B', 'C', 'D', 2),
   ])
-  expect('2. a draw sends both through', changesFor(p, 'B1'), ['A draw is enough for both A and B'])
+  expect('2. a draw sends both through (WHY)', whyFor(p, 'B1'), ['draw sends both A and B'])
+  expect('2b. headline = who tops', changesFor(p, 'B1'), ['Who tops'])
 }
 
 // CASE 3 — asymmetric: a draw is enough for A; B must win (C can still reach B's
@@ -76,7 +86,7 @@ function expectNot(label: string, got: string, banned: string[]) {
     upcoming('C', 'A', 'B', 1),
     upcoming('C', 'C', 'D', 2),
   ])
-  expect('3. asymmetric clinch (A vs B)', changesFor(p, 'C1'), ['draw is enough for A', 'win sends B through'])
+  expect('3. asymmetric clinch (WHY)', whyFor(p, 'C1'), ['draw is enough for A', 'win sends B through'])
 }
 
 // CASE 4 — early (1 game played, 2 to go): nothing is clinchable. Must fall back
@@ -88,9 +98,10 @@ function expectNot(label: string, got: string, banned: string[]) {
     upcoming('D', 'A', 'C', 3),
     upcoming('D', 'B', 'D', 4),
   ])
-  const got = changesFor(p, 'D1')
-  expect('4. no clinch → names the field', got, ['Who goes through', 'C', 'D'])
-  expectNot('4b. no false guarantee', got, ['sends A through', 'sends B through', 'a draw is enough'])
+  const why = whyFor(p, 'D1')
+  expect('4. no clinch → names the field (WHY)', why, ['chasing the spots', 'C', 'D'])
+  expect('4b. clean headline', changesFor(p, 'D1'), ['Who goes through'])
+  expectNot('4c. no false guarantee', why, ['sends A through', 'sends B through', 'draw is enough'])
 }
 
 // CASE 5 — one side already through (advanced), the other (rank 2) can confirm
@@ -100,7 +111,8 @@ function expectNot(label: string, got: string, banned: string[]) {
     upcoming('E', 'A', 'B', 1),
     upcoming('E', 'C', 'D', 2),
   ])
-  expect('5. alive-in-spot win clinch (A vs through B)', changesFor(p, 'E1'), ['Win and A are through'])
+  expect('5. alive-in-spot win clinch (WHY)', whyFor(p, 'E1'), ['win sends A through'])
+  expect('5b. clean headline', changesFor(p, 'E1'), ['Whether A go through'])
 }
 
 console.log(failures ? `\n${failures} FAILED` : '\nALL SCENARIO CHECKS PASS')

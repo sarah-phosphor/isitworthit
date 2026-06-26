@@ -88,7 +88,14 @@ function Masthead({ showStepper, off, searchActive, nav, data }: { showStepper: 
       {/* balanced three-part bar: freshness left · day stepper centered · search right (R3-5) */}
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '7px 0' }}>
         <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', justifyContent: 'flex-start' }}>
-          {data && <Freshness data={data} />}
+          {/* on the search page this slot is the "Today" back-link instead of freshness (C4) */}
+          {searchActive ? (
+            <span onClick={nav.goToday} className="lkb" style={{ cursor: 'pointer', font: "500 13.5px 'Newsreader',serif", color: '#6b6660', borderBottom: '1px solid #d3ccbf', paddingBottom: 2, whiteSpace: 'nowrap' }}>
+              ← Today
+            </span>
+          ) : (
+            data && <Freshness data={data} />
+          )}
         </div>
         {showStepper && (
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 24 }}>
@@ -103,12 +110,15 @@ function Masthead({ showStepper, off, searchActive, nav, data }: { showStepper: 
           </div>
         )}
         <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>
-          <span
-            onClick={nav.goSearch}
-            style={{ cursor: 'pointer', font: "500 13px 'Instrument Sans',sans-serif", letterSpacing: '.04em', paddingBottom: 2, color: searchActive ? '#1c1a17' : '#9a948a', borderBottom: `2px solid ${searchActive ? '#8a2b22' : 'transparent'}`, whiteSpace: 'nowrap' }}
-          >
-            Search by team
-          </span>
+          {/* redundant on the search page itself (C4) */}
+          {!searchActive && (
+            <span
+              onClick={nav.goSearch}
+              style={{ cursor: 'pointer', font: "500 13px 'Instrument Sans',sans-serif", letterSpacing: '.04em', paddingBottom: 2, color: '#9a948a', borderBottom: '2px solid transparent', whiteSpace: 'nowrap' }}
+            >
+              Search by team
+            </span>
+          )}
         </div>
       </nav>
       <div style={{ height: 1, background: '#ddd7ca' }} />
@@ -145,17 +155,17 @@ export function SearchView({ ctx, query, onQuery, nav }: { ctx: QualContext; que
     .filter((x) => x.teams.length > 0)
 
   return (
-    <section style={{ paddingTop: 34 }}>
-      <BackLink label="Today" onBack={nav.goToday} />
+    <section style={{ paddingTop: 24 }}>
+      {/* "Today" back-link lives in the masthead now; groups sit higher (C4) */}
       <h2 style={{ margin: '0 0 4px', font: "500 24px 'Newsreader',serif", color: '#1c1a17', letterSpacing: '-.01em' }}>Search by team</h2>
-      <p style={{ margin: '0 0 18px', font: "400 15px 'Newsreader',serif", color: '#8a857d' }}>Pick a country to see where it stands and what its next game means.</p>
+      <p style={{ margin: '0 0 16px', font: "400 15px 'Newsreader',serif", color: '#8a857d' }}>Pick a country to see where it stands and what its next game means.</p>
       <input
         value={query}
         onChange={(e) => onQuery(e.target.value)}
         placeholder="Type a country — France, USA, Argentina, Japan…"
         style={{ width: '100%', maxWidth: 620, display: 'block', font: "400 18px 'Newsreader',serif", color: '#1c1a17', background: '#f8f6f0', border: '1px solid #ddd7ca', padding: '14px 16px', outline: 'none' }}
       />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: '36px 48px', marginTop: 36 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: '36px 48px', marginTop: 26 }}>
         {groups.map(({ g, teams }) => (
           <div key={g.id}>
             <h3
