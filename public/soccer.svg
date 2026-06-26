@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Soccer ball">
+  <defs>
+    <clipPath id="ball">
+      <circle cx="32" cy="32" r="29"/>
+    </clipPath>
+  </defs>
+  <circle cx="32" cy="32" r="29" fill="#fff" stroke="#1a1a1a" stroke-width="3"/>
+  <g clip-path="url(#ball)" fill="#1a1a1a">
+    <!-- seams: central pentagon vertices out to the rim pentagons -->
+    <g stroke="#1a1a1a" stroke-width="2.6" stroke-linecap="round" fill="none">
+      <line x1="32" y1="21" x2="32" y2="9"/>
+      <line x1="42.5" y1="28.6" x2="52" y2="22"/>
+      <line x1="38.5" y1="40.9" x2="46" y2="50"/>
+      <line x1="25.5" y1="40.9" x2="18" y2="50"/>
+      <line x1="21.5" y1="28.6" x2="12" y2="22"/>
+    </g>
+    <!-- central pentagon -->
+    <polygon points="32,21 42.5,28.6 38.5,40.9 25.5,40.9 21.5,28.6"/>
+    <!-- five partial pentagons clipped at the rim -->
+    <polygon points="32,0 37.7,4.15 35.53,10.85 28.47,10.85 26.3,4.15"/>
+    <polygon points="53,16 58.7,20.15 56.53,26.85 49.47,26.85 47.3,20.15"/>
+    <polygon points="47,46 52.7,50.15 50.53,56.85 43.47,56.85 41.3,50.15"/>
+    <polygon points="17,46 22.7,50.15 20.53,56.85 13.47,56.85 11.3,50.15"/>
+    <polygon points="11,16 16.7,20.15 14.53,26.85 7.47,26.85 5.3,20.15"/>
+  </g>
+</svg>

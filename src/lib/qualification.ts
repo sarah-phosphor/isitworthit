@@ -168,6 +168,54 @@ function resultClinchesTop2(ctx: QualContext, match: Match, teamId: string, gain
 const winClinches = (ctx: QualContext, m: Match, id: string) => resultClinchesTop2(ctx, m, id, 3)
 const drawClinches = (ctx: QualContext, m: Match, id: string) => resultClinchesTop2(ctx, m, id, 1)
 
+// ---------- "did a completed game actually matter?" (dead-rubber detection) ----------
+// A finished group game changed nothing if neither side's qualification could have
+// differed under any other result. The group must be complete (every OTHER team's
+// total is already final), so across the three W/D/L outcomes only these two teams'
+// points move. We prove invariance on points alone — goal margins for hypothetical
+// results are unknowable — and only call it settled when BOTH teams land definitively
+// through (top two) or out (bottom) in every case. A third-place finish is left as
+// "could have mattered": the best-third cut is cross-group and turns on the exact
+// points/GD we can't reconstruct for a what-if score.
+
+type QualBucket = 'top2' | 'third' | 'fourth' | 'amb'
+
+function qualBucket(pts: number, otherPts: number[]): QualBucket {
+  const above = otherPts.filter((p) => p > pts).length
+  const ties = otherPts.filter((p) => p === pts).length
+  const best = above + 1 // best possible finishing rank (ties break our way)
+  const worst = above + ties + 1 // worst possible (ties break against us)
+  if (worst <= 2) return 'top2'
+  if (best >= 4) return 'fourth'
+  if (best >= 3 && worst <= 3) return 'third'
+  return 'amb'
+}
+
+function completedGroupMatchInvariant(ctx: QualContext, match: Match): boolean {
+  if (!match.group || !match.score) return false
+  const g = ctx.groupById.get(match.group)
+  if (!g || !g.table.every((r) => r.played >= 3)) return false
+  const h = ctx.rowByTeam.get(match.homeId)
+  const a = ctx.rowByTeam.get(match.awayId)
+  if (!h || !a) return false
+  const { home: sh, away: sa } = match.score
+  const got = (gf: number, ga: number) => (gf > ga ? 3 : gf === ga ? 1 : 0)
+  const preH = h.pts - got(sh, sa) // each side's points BEFORE this game
+  const preA = a.pts - got(sa, sh)
+  const others = g.table
+    .filter((r) => r.teamId !== match.homeId && r.teamId !== match.awayId)
+    .map((r) => r.pts)
+  const outcomes: Array<[number, number]> = [[3, 0], [1, 1], [0, 3]]
+  const hB = new Set<QualBucket>()
+  const aB = new Set<QualBucket>()
+  for (const [hp, ap] of outcomes) {
+    hB.add(qualBucket(preH + hp, [...others, preA + ap]))
+    aB.add(qualBucket(preA + ap, [...others, preH + hp]))
+  }
+  const settled = (s: Set<QualBucket>) => s.size === 1 && (s.has('top2') || s.has('fourth'))
+  return settled(hB) && settled(aB)
+}
+
 // Mirror of the clinch maths but for a team's FLOOR: can `teamId` still finish in
 // the top two if it takes `gain` (3 = win, 1 = draw) from this match? Best case for
 // them — they win every other game left; every rival loses every other game (the
@@ -423,27 +471,44 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
 
   // ----- completed group match (safe, status-anchored) -----
   if (completed && score) {
-    // binary verdict (item 2): No only when advancement was fully settled — both
-    // ended out, or both through (so the game decided seeding only). Else Yes.
-    const matters = bothOut || bothThrough ? 'No.' : 'Yes.'
+    // binary verdict (item 2): No when advancement was fully settled regardless of
+    // this result — both ended out, both through (so it only set seeding), or a
+    // dead rubber where the points couldn't have moved either side's fate (e.g. the
+    // group winner losing to an already-eliminated side). Else Yes.
+    const deadRubber = bothOut || bothThrough || completedGroupMatchInvariant(ctx, match)
+    const matters = deadRubber ? 'No.' : 'Yes.'
     const w = score.home > score.away ? home : score.home < score.away ? away : null
 
-    const whatChanges = bothOut
-      ? 'Not much in the end — neither side reached the knockouts.'
-      : `${capitalize(outcomeClause(ctx, match.homeId, home, complete))}; ${outcomeClause(ctx, match.awayId, away, complete)}.`
-
-    let why: Gloss
-    if (bothOut) {
-      why = text('Both already missed the knockouts.')
-    } else if (levelOnPoints(ctx, match) && complete) {
-      why = tip('Level on points. ', 'Goal difference', ' settled it.', 'goalDifference')
-    } else {
-      why = text(
-        w
-          ? `${possessive(w)} win ${complete ? 'settled' : 'shaped'} the group.`
-          : `Draw ${complete ? 'settled' : 'shaped'} the order.`,
-      )
+    if (deadRubber) {
+      // Nothing was riding on it — say so plainly, while still noting where each
+      // side ended up (informative, just not consequential to qualification).
+      let whatChanges: string
+      let why: Gloss
+      if (bothOut) {
+        whatChanges = 'Not much in the end — neither side reached the knockouts.'
+        why = text('Both had already missed the knockouts.')
+      } else if (bothThrough) {
+        whatChanges = `Only the seeding — both were already through in Group ${match.group}.`
+        why = text('Both had already qualified; this just set the order.')
+      } else if (oneThroughOneOut) {
+        whatChanges = `Nothing was riding on it — ${throughName} were already through and ${outName} already out.`
+        why = text(`${throughName} had qualified and ${outName} were eliminated before kickoff.`)
+      } else {
+        whatChanges = 'Nothing — the group was already settled before kickoff.'
+        why = text('Neither side’s place could have changed.')
+      }
+      return { matters, whatChanges, why }
     }
+
+    const whatChanges = `${capitalize(outcomeClause(ctx, match.homeId, home, complete))}; ${outcomeClause(ctx, match.awayId, away, complete)}.`
+    const why: Gloss =
+      levelOnPoints(ctx, match) && complete
+        ? tip('Level on points. ', 'Goal difference', ' settled it.', 'goalDifference')
+        : text(
+            w
+              ? `${possessive(w)} win ${complete ? 'settled' : 'shaped'} the group.`
+              : `Draw ${complete ? 'settled' : 'shaped'} the order.`,
+          )
     return { matters, whatChanges, why }
   }
 
