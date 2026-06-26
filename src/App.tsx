@@ -1,24 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { ScoresPayload } from './lib/model'
 import { useScores } from './lib/useScores'
 import { buildCard } from './lib/buildCard'
-import { buildContext, groupSummary, teamStatusLine, type QualContext } from './lib/qualification'
+import { buildContext, groupSummary, teamNextOutlook, teamStatusLine, type QualContext } from './lib/qualification'
 import { dateKey, dayOffset, fullLabel, offsetForKey, relName } from './lib/dates'
-import { slugify, teamMatchesQuery } from './lib/search'
+import { slugify } from './lib/search'
 import { isoForTeam } from './lib/flags'
 import { MatchCard } from './components/MatchCard'
 import { StandingsTable } from './components/StandingsTable'
 import { Flag } from './components/Flag'
 
-type View = 'day' | 'search' | 'group' | 'team' | 'match'
+type View = 'day' | 'standings' | 'group' | 'team' | 'match'
 
 interface Nav {
   openTeam: (id: string) => void
   openGroup: (id: string) => void
   openMatch: (id: string) => void
-  goBack: () => void
   goToday: () => void
-  goSearch: () => void
+  goStandings: () => void
   prevDay: () => void
   nextDay: () => void
 }
@@ -45,23 +44,19 @@ function teamPast(teamId: string, p: ScoresPayload): string[] {
     })
 }
 
-// ---------- shared bits ----------
-
-function BackLink({ label, onBack }: { label: string; onBack: () => void }) {
-  return (
-    <span
-      onClick={onBack}
-      className="lk"
-      style={{ cursor: 'pointer', display: 'inline-block', font: "500 13px 'Instrument Sans',sans-serif", letterSpacing: '.04em', color: '#8a857d', marginBottom: 24 }}
-    >
-      ← {label}
-    </span>
-  )
-}
-
 // ---------- masthead ----------
 
-function Masthead({ showStepper, off, searchActive, nav, data }: { showStepper: boolean; off: number; searchActive: boolean; nav: Nav; data: ScoresPayload | null }) {
+function Masthead({ view, off, nav, data }: { view: View; off: number; nav: Nav; data: ScoresPayload | null }) {
+  const matchesActive = view === 'day' || view === 'match'
+  const standingsActive = view === 'standings' || view === 'group' || view === 'team'
+  const tab = (active: boolean): CSSProperties => ({
+    cursor: 'pointer',
+    font: "500 14px 'Instrument Sans',sans-serif",
+    letterSpacing: '.03em',
+    paddingBottom: 5,
+    color: active ? '#1c1a17' : '#8a857d',
+    borderBottom: `2px solid ${active ? '#8a2b22' : 'transparent'}`,
+  })
   const stepLink = {
     cursor: 'pointer',
     font: "500 13px 'Instrument Sans',sans-serif",
@@ -85,19 +80,17 @@ function Masthead({ showStepper, off, searchActive, nav, data }: { showStepper: 
       <p style={{ margin: '9px 0 0', font: "400 17px 'Newsreader',serif", color: '#6b6660' }}>Every game, translated.</p>
       <div style={{ height: 1, background: '#ddd7ca', margin: '14px 0 0' }} />
 
-      {/* balanced three-part bar: freshness left · day stepper centered · search right (R3-5) */}
-      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '7px 0' }}>
-        <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', justifyContent: 'flex-start' }}>
-          {/* on the search page this slot is the "Today" back-link instead of freshness (C4) */}
-          {searchActive ? (
-            <span onClick={nav.goToday} className="lkb" style={{ cursor: 'pointer', font: "500 13.5px 'Newsreader',serif", color: '#6b6660', borderBottom: '1px solid #d3ccbf', paddingBottom: 2, whiteSpace: 'nowrap' }}>
-              ← Today
-            </span>
-          ) : (
-            data && <Freshness data={data} />
-          )}
-        </div>
-        {showStepper && (
+      {/* persistent tabs — identical on every page (item 3) */}
+      <nav style={{ display: 'flex', alignItems: 'center', gap: 28, padding: '9px 0' }}>
+        <span onClick={nav.goToday} style={tab(matchesActive)}>Matches</span>
+        <span onClick={nav.goStandings} style={tab(standingsActive)}>Standings</span>
+      </nav>
+      <div style={{ height: 1, background: '#ddd7ca' }} />
+
+      {/* Matches view only: date stepper centered, "Updated X ago" right (item 3) */}
+      {view === 'day' && (
+        <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 0 0' }}>
+          <div style={{ flex: '1 1 0', minWidth: 0 }} />
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 24 }}>
             <span onClick={nav.prevDay} className="lk" style={stepLink}>‹ {relName(off - 1)}</span>
             <div onClick={nav.goToday} style={{ cursor: 'pointer', textAlign: 'center', minWidth: 148, height: 38, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
@@ -108,20 +101,11 @@ function Masthead({ showStepper, off, searchActive, nav, data }: { showStepper: 
             </div>
             <span onClick={nav.nextDay} className="lk" style={stepLink}>{relName(off + 1)} ›</span>
           </div>
-        )}
-        <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>
-          {/* redundant on the search page itself (C4) */}
-          {!searchActive && (
-            <span
-              onClick={nav.goSearch}
-              style={{ cursor: 'pointer', font: "500 13px 'Instrument Sans',sans-serif", letterSpacing: '.04em', paddingBottom: 2, color: '#9a948a', borderBottom: '2px solid transparent', whiteSpace: 'nowrap' }}
-            >
-              Search by team
-            </span>
-          )}
-        </div>
-      </nav>
-      <div style={{ height: 1, background: '#ddd7ca' }} />
+          <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>
+            {data && <Freshness data={data} />}
+          </div>
+        </nav>
+      )}
     </header>
   )
 }
@@ -147,26 +131,13 @@ export function DayView({ off, ctx, nav }: { off: number; ctx: QualContext; nav:
   )
 }
 
-// ---------- search (standings view) ----------
+// ---------- standings (the grouped A–L grid; every team is listed + clickable) ----------
 
-export function SearchView({ ctx, query, onQuery, nav }: { ctx: QualContext; query: string; onQuery: (s: string) => void; nav: Nav }) {
-  const groups = ctx.payload.groups
-    .map((g) => ({ g, teams: g.table.filter((r) => teamMatchesQuery(r.name, ctx.payload.teams[r.teamId]?.short, query)) }))
-    .filter((x) => x.teams.length > 0)
-
+export function StandingsView({ ctx, nav }: { ctx: QualContext; nav: Nav }) {
   return (
-    <section style={{ paddingTop: 24 }}>
-      {/* "Today" back-link lives in the masthead now; groups sit higher (C4) */}
-      <h2 style={{ margin: '0 0 4px', font: "500 24px 'Newsreader',serif", color: '#1c1a17', letterSpacing: '-.01em' }}>Search by team</h2>
-      <p style={{ margin: '0 0 16px', font: "400 15px 'Newsreader',serif", color: '#8a857d' }}>Pick a country to see where it stands and what its next game means.</p>
-      <input
-        value={query}
-        onChange={(e) => onQuery(e.target.value)}
-        placeholder="Type a country — France, USA, Argentina, Japan…"
-        style={{ width: '100%', maxWidth: 620, display: 'block', font: "400 18px 'Newsreader',serif", color: '#1c1a17', background: '#f8f6f0', border: '1px solid #ddd7ca', padding: '14px 16px', outline: 'none' }}
-      />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: '36px 48px', marginTop: 26 }}>
-        {groups.map(({ g, teams }) => (
+    <section style={{ paddingTop: 30 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: '36px 48px' }}>
+        {ctx.payload.groups.map((g) => (
           <div key={g.id}>
             <h3
               onClick={() => nav.openGroup(g.id)}
@@ -175,7 +146,7 @@ export function SearchView({ ctx, query, onQuery, nav }: { ctx: QualContext; que
             >
               {g.name}
             </h3>
-            {teams.map((r) => {
+            {g.table.map((r) => {
               const st = ctx.status.get(r.teamId)
               const out = st?.status === 'out'
               return (
@@ -201,16 +172,13 @@ export function SearchView({ ctx, query, onQuery, nav }: { ctx: QualContext; que
           </div>
         ))}
       </div>
-      {query.trim().length > 0 && groups.length === 0 && (
-        <p style={{ font: "400 16px 'Newsreader',serif", color: '#9a948a', padding: '24px 2px' }}>No team by that name in this tournament.</p>
-      )}
     </section>
   )
 }
 
 // ---------- group ----------
 
-export function GroupView({ groupId, ctx, backLabel, nav }: { groupId: string; ctx: QualContext; backLabel: string; nav: Nav }) {
+export function GroupView({ groupId, ctx, nav }: { groupId: string; ctx: QualContext; nav: Nav }) {
   const g = ctx.groupById.get(groupId)
   if (!g) return null
   const cards = ctx.payload.matches
@@ -219,7 +187,6 @@ export function GroupView({ groupId, ctx, backLabel, nav }: { groupId: string; c
     .map((m) => buildCard(m, ctx, nav))
   return (
     <section style={{ paddingTop: 34 }}>
-      <BackLink label={backLabel} onBack={nav.goBack} />
       <h2 style={{ margin: 0, font: "500 30px 'Newsreader',serif", color: '#1c1a17', letterSpacing: '-.015em' }}>{g.name}</h2>
       <p style={{ margin: '12px 0 0', font: "400 18px/1.5 'Newsreader',serif", color: '#3a3631', maxWidth: 660 }}>{groupSummary(g, ctx)}</p>
 
@@ -238,14 +205,13 @@ export function GroupView({ groupId, ctx, backLabel, nav }: { groupId: string; c
 
 // ---------- team ----------
 
-export function TeamView({ teamId, ctx, backLabel, nav }: { teamId: string; ctx: QualContext; backLabel: string; nav: Nav }) {
+export function TeamView({ teamId, ctx, nav }: { teamId: string; ctx: QualContext; nav: Nav }) {
   const team = ctx.payload.teams[teamId]
   if (!team) return null
   const next = ctx.payload.matches.find((m) => (m.state === 'upcoming' || m.state === 'live') && (m.homeId === teamId || m.awayId === teamId))
   const past = teamPast(teamId, ctx.payload)
   return (
     <section style={{ paddingTop: 34 }}>
-      <BackLink label={backLabel} onBack={nav.goBack} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <Flag iso={isoForTeam(team)} h={30} />
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
@@ -275,11 +241,15 @@ export function TeamView({ teamId, ctx, backLabel, nav }: { teamId: string; ctx:
         </div>
 
         <div>
-          <div style={{ ...LBL, marginBottom: 12 }}>Next match</div>
+          <div style={{ ...LBL, marginBottom: 12 }}>{next ? 'Next match' : 'What’s next'}</div>
           {next ? (
             <MatchCard card={buildCard(next, ctx, nav)} />
           ) : (
-            <p style={{ margin: 0, font: "400 17px 'Newsreader',serif", color: '#9a948a' }}>No upcoming games — this team’s tournament is over for now.</p>
+            (() => {
+              const o = teamNextOutlook(teamId, ctx)
+              const color = o.tone === 'through' ? '#1c1a17' : o.tone === 'out' ? '#9a948a' : '#3a3631'
+              return <p style={{ margin: 0, font: "400 17px/1.5 'Newsreader',serif", color }}>{o.line}</p>
+            })()
           )}
         </div>
       </div>
@@ -289,14 +259,13 @@ export function TeamView({ teamId, ctx, backLabel, nav }: { teamId: string; ctx:
 
 // ---------- match ----------
 
-export function MatchView({ matchId, ctx, backLabel, nav }: { matchId: string; ctx: QualContext; backLabel: string; nav: Nav }) {
+export function MatchView({ matchId, ctx, nav }: { matchId: string; ctx: QualContext; nav: Nav }) {
   const match = ctx.payload.matches.find((m) => m.id === matchId)
   if (!match) return null
   const card = buildCard(match, ctx, nav)
   const group = match.group ? ctx.groupById.get(match.group) : undefined
   return (
     <section style={{ paddingTop: 34 }}>
-      <BackLink label={backLabel} onBack={nav.goBack} />
       {group ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px,440px) 1fr', gap: 48, alignItems: 'start' }}>
           <MatchCard card={card} linkToMatch={false} />
@@ -368,15 +337,13 @@ export function App() {
   const [teamId, setTeamId] = useState<string | null>(null)
   const [groupId, setGroupId] = useState<string | null>(null)
   const [matchId, setMatchId] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const prevPath = useRef<string | undefined>(undefined)
   const inited = useRef(false)
 
   const ctx = useMemo(() => (data ? buildContext(data) : null), [data])
 
   function applyPath(path: string) {
     const [a, b] = path.split('/').filter(Boolean)
-    if (a === 'search') return setView('search')
+    if (a === 'standings') return setView('standings')
     if (a === 'group' && b) {
       setGroupId(b.toUpperCase())
       return setView('group')
@@ -418,20 +385,8 @@ export function App() {
 
   const push = (p: string) => window.history.pushState({}, '', p)
   const navTo = (updater: () => void, path: string) => {
-    prevPath.current = window.location.pathname
     updater()
     push(path)
-  }
-  const parentPath = (): string => {
-    if (view === 'team' && teamId) {
-      const g = data?.teams[teamId]?.group
-      return g ? `/group/${g.toLowerCase()}` : '/'
-    }
-    if (view === 'match' && matchId) {
-      const g = data?.matches.find((m) => m.id === matchId)?.group
-      return g ? `/group/${g.toLowerCase()}` : '/'
-    }
-    return '/'
   }
 
   const nav: Nav = {
@@ -439,30 +394,15 @@ export function App() {
     openGroup: (id) => navTo(() => { setGroupId(id); setView('group') }, `/group/${id.toLowerCase()}`),
     openMatch: (id) => navTo(() => { setMatchId(id); setView('match') }, `/match/${id}`),
     goToday: () => navTo(() => { setView('day'); setDayOff(0) }, '/'),
-    goSearch: () => navTo(() => setView('search'), '/search'),
+    goStandings: () => navTo(() => setView('standings'), '/standings'),
     prevDay: () => { const n = dayOff - 1; navTo(() => { setView('day'); setDayOff(n) }, n === 0 ? '/' : `/day/${dateKey(n)}`) },
     nextDay: () => { const n = dayOff + 1; navTo(() => { setView('day'); setDayOff(n) }, n === 0 ? '/' : `/day/${dateKey(n)}`) },
-    goBack: () => {
-      const target = prevPath.current ?? parentPath()
-      prevPath.current = undefined
-      push(target)
-      applyPath(target)
-    },
   }
-
-  const backTarget = prevPath.current ?? parentPath()
-  const backLabel = backTarget.startsWith('/group/')
-    ? `Group ${backTarget.split('/')[2]?.toUpperCase() ?? ''}`.trim()
-    : backTarget === '/search'
-      ? 'Search'
-      : backTarget.startsWith('/team/')
-        ? 'Back'
-        : 'Today'
 
   return (
     <div style={{ minHeight: '100vh', background: '#f1ede4' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 28px 90px' }}>
-        <Masthead showStepper={view === 'day'} off={dayOff} searchActive={view === 'search'} nav={nav} data={data} />
+        <Masthead view={view} off={dayOff} nav={nav} data={data} />
 
         {!ctx && loading && <p style={{ font: "400 18px 'Newsreader',serif", color: '#9a948a', paddingTop: 30 }}>Loading today’s games…</p>}
         {!ctx && !loading && error && (
@@ -472,10 +412,10 @@ export function App() {
         {ctx && (
           <>
             {view === 'day' && <DayView off={dayOff} ctx={ctx} nav={nav} />}
-            {view === 'search' && <SearchView ctx={ctx} query={query} onQuery={setQuery} nav={nav} />}
-            {view === 'group' && groupId && <GroupView groupId={groupId} ctx={ctx} backLabel={backLabel} nav={nav} />}
-            {view === 'team' && teamId && <TeamView teamId={teamId} ctx={ctx} backLabel={backLabel} nav={nav} />}
-            {view === 'match' && matchId && <MatchView matchId={matchId} ctx={ctx} backLabel={backLabel} nav={nav} />}
+            {view === 'standings' && <StandingsView ctx={ctx} nav={nav} />}
+            {view === 'group' && groupId && <GroupView groupId={groupId} ctx={ctx} nav={nav} />}
+            {view === 'team' && teamId && <TeamView teamId={teamId} ctx={ctx} nav={nav} />}
+            {view === 'match' && matchId && <MatchView matchId={matchId} ctx={ctx} nav={nav} />}
           </>
         )}
       </div>

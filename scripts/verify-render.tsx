@@ -3,15 +3,14 @@
 import { renderToString } from 'react-dom/server'
 import { getScores } from '../src/lib/espnSource'
 import { buildContext } from '../src/lib/qualification'
-import { DayView, SearchView, GroupView, TeamView, MatchView } from '../src/App'
+import { DayView, StandingsView, GroupView, TeamView, MatchView } from '../src/App'
 
 const nav = {
   openTeam() {},
   openGroup() {},
   openMatch() {},
-  goBack() {},
   goToday() {},
-  goSearch() {},
+  goStandings() {},
   prevDay() {},
   nextDay() {},
 }
@@ -45,11 +44,9 @@ const tname = p.groups[0].table[0].name
 const mid = p.matches.find((m) => m.group)?.id ?? p.matches[0].id
 
 check('DayView', <DayView off={0} ctx={ctx} nav={nav} />, ['Does it matter', 'What changes'])
-check('GroupView', <GroupView groupId={gid} ctx={ctx} backLabel="Today" nav={nav} />, [`Group ${gid}`, 'Pts', 'Matches'])
-check('TeamView', <TeamView teamId={tid} ctx={ctx} backLabel="Group" nav={nav} />, [tname, 'Current status', 'Past matches'])
-check('MatchView', <MatchView matchId={mid} ctx={ctx} backLabel="Today" nav={nav} />, ['it matter?'])
-check('SearchView', <SearchView ctx={ctx} query="" onQuery={() => {}} nav={nav} />, ['Search by team', 'pts'])
-check('SearchView(USA alias)', <SearchView ctx={ctx} query="usa" onQuery={() => {}} nav={nav} />, ['United States'])
-check('SearchView(turkey alias)', <SearchView ctx={ctx} query="turkey" onQuery={() => {}} nav={nav} />, ['Türkiye'])
+check('GroupView', <GroupView groupId={gid} ctx={ctx} nav={nav} />, [`Group ${gid}`, 'Pts', 'Matches'])
+check('TeamView', <TeamView teamId={tid} ctx={ctx} nav={nav} />, [tname, 'Current status', 'Past matches'])
+check('MatchView', <MatchView matchId={mid} ctx={ctx} nav={nav} />, ['it matter?'])
+check('StandingsView', <StandingsView ctx={ctx} nav={nav} />, [`Group ${gid}`, 'pts', tname])
 
 console.log(failures ? `\n${failures} FAILED` : '\nALL VIEWS RENDER OK')

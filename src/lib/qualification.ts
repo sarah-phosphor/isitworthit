@@ -260,6 +260,83 @@ export function teamStatusLine(id: string, ctx: QualContext): string {
   return 'Still to play its group games.'
 }
 
+// ---------- team "what's next" outlook (item 4) ----------
+// For a team with NO scheduled match. Splits the old blanket "tournament is over"
+// by real state, and for a third-placed team whose group is done it computes the
+// best-third advance/elimination conditions from the feed.
+//
+// Best-third rule: the top 8 of the 12 third-placed teams advance, ranked by
+// points → goal difference → goals scored → … The feed gives points + GD but NOT
+// goals scored, so we prove from points alone and treat pts+GD ties as undecided
+// (handled conservatively); we never assert a goals-for-dependent outcome.
+
+const BEST_THIRDS = 8
+
+export interface NextOutlook {
+  tone: 'out' | 'through' | 'race' | 'wait'
+  line: string
+}
+
+// 3rd-place rows of groups whose games are all played (fixed for the race).
+function completedThirds(ctx: QualContext): GroupRow[] {
+  const out: GroupRow[] = []
+  for (const g of ctx.groupById.values()) {
+    if (g.table.every((r) => r.played >= 3)) {
+      const third = g.table.find((r) => r.rank === 3)
+      if (third) out.push(third)
+    }
+  }
+  return out
+}
+
+// >0 if A ranks above B among third-placed teams; 0 = level on pts+GD (undecided).
+function thirdAboveBy(a: { pts: number; gd: number }, b: { pts: number; gd: number }): number {
+  return a.pts !== b.pts ? a.pts - b.pts : a.gd - b.gd
+}
+
+export function teamNextOutlook(teamId: string, ctx: QualContext): NextOutlook {
+  const s = statusOf(ctx, teamId)
+  const name = ctx.payload.teams[teamId]?.name ?? ctx.rowByTeam.get(teamId)?.name ?? 'This team'
+  if (s === 'out') return { tone: 'out', line: 'Knocked out — no more games.' }
+  if (s === 'through') return { tone: 'through', line: `${name} are through — waiting on the knockout draw.` }
+
+  const row = ctx.rowByTeam.get(teamId)
+  const grp = ctx.payload.teams[teamId]?.group
+  const g = grp ? ctx.groupById.get(grp) : undefined
+  const groupDone = !!g && g.table.every((r) => r.played >= 3)
+
+  // a third-placed team whose group is done, still chasing a best-third spot
+  if (s === 'alive' && row && row.rank === 3 && groupDone && grp) {
+    const thirds = completedThirds(ctx).filter((t) => t.teamId !== teamId)
+    const pending = [...ctx.groupById.values()].filter((x) => !x.table.every((r) => r.played >= 3)).length
+    const strictlyAbove = thirds.filter((t) => thirdAboveBy(t, row) > 0).length
+    const couldBeAbove = thirds.filter((t) => thirdAboveBy(t, row) >= 0).length // ties count as maybe-above
+
+    if (strictlyAbove >= BEST_THIRDS) {
+      return { tone: 'out', line: `Knocked out — ${name} finished outside the best ${BEST_THIRDS} third-placed teams.` }
+    }
+    if (couldBeAbove + pending < BEST_THIRDS) {
+      return { tone: 'through', line: `${name} are through as one of the best ${BEST_THIRDS} third-placed teams.` }
+    }
+
+    const kElim = BEST_THIRDS - strictlyAbove // this many pending groups must out-third them to eliminate
+    const pts = `${row.pts} ${row.pts === 1 ? 'pt' : 'pts'}`
+    if (kElim > pending) {
+      // pending results alone can't push them out — it comes down to the goals-scored tiebreak
+      const tail = pending > 0 ? `goals scored and the last ${pending} ${pending === 1 ? 'group' : 'groups'}` : 'goals scored'
+      return { tone: 'race', line: `${name} finished third in Group ${grp} on ${pts}. Level with other thirds on points and goal difference — their place hinges on ${tail}.` }
+    }
+    const aboveTxt = strictlyAbove === 0 ? 'none above them yet' : `${strictlyAbove} third${strictlyAbove === 1 ? '' : 's'} above`
+    return {
+      tone: 'race',
+      line: `${name} finished third in Group ${grp} on ${pts} — ${aboveTxt}, ${pending} ${pending === 1 ? 'group' : 'groups'} left. Best ${BEST_THIRDS} thirds advance; out only if ${kElim}+ of those finish with a better third.`,
+    }
+  }
+
+  // genuinely indeterminate / unusual (e.g. knockout limbo) — honest, no false claim
+  return { tone: 'wait', line: 'Group games done — waiting on other groups’ results.' }
+}
+
 export function editorialFor(match: Match, ctx: QualContext): Editorial {
   const { home, away, score } = match
   const sh = statusOf(ctx, match.homeId)

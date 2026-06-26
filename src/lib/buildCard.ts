@@ -124,9 +124,8 @@ export function buildCard(
     homeClickable,
     awayClickable,
     hasScore: !!match.score,
-    scoreStrip: match.score
-      ? `${home} ${match.score.home} · ${away} ${match.score.away}`
-      : '',
+    // just the numbers, home–away (names are already in the title) — item 1
+    scoreStrip: match.score ? `${match.score.home} – ${match.score.away}` : '',
     groupLabel: match.group ? `Group ${match.group}` : match.roundName ?? 'Knockout',
     groupClickable: !!match.group,
     metaTail,
