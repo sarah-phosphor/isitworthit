@@ -155,6 +155,35 @@ function roundFromSlug(slug: string): string | undefined {
   return ROUND_LABEL[slug] ?? slug.replace(/-/g, ' ')
 }
 
+// The 16 WC2026 host venues → a region code appended after the city (R4.1-4).
+// ESPN's venue address only carries { city, country } — there is NO `state` field:
+// the US state is buried inside `city` ("Foxborough, Massachusetts") and Canada/
+// Mexico carry no region at all. Rather than trust that inconsistent feed we map the
+// 16 known venues (keyed by ESPN's exact `fullName`). US/Canada use the standard
+// 2-letter code; Mexico has no 2-letter standard, so the recognizable region name is
+// used. A venue missing from the map just renders without a region.
+const VENUE_REGION: Record<string, string> = {
+  // United States
+  'SoFi Stadium': 'CA',
+  "Levi's Stadium": 'CA',
+  'Lumen Field': 'WA',
+  'Gillette Stadium': 'MA',
+  'MetLife Stadium': 'NJ',
+  'Lincoln Financial Field': 'PA',
+  'Hard Rock Stadium': 'FL',
+  'Mercedes-Benz Stadium': 'GA',
+  'NRG Stadium': 'TX',
+  'AT&T Stadium': 'TX',
+  'GEHA Field at Arrowhead Stadium': 'MO',
+  // Canada
+  'BMO Field': 'ON',
+  'BC Place': 'BC',
+  // Mexico (no standard 2-letter code)
+  'Estadio Banorte': 'CDMX',
+  'Estadio Akron': 'Jalisco',
+  'Estadio BBVA': 'Nuevo León',
+}
+
 function parseMatch(ev: any, teams: Record<string, Team>): Match | null {
   const comp = ev?.competitions?.[0]
   if (!comp) return null
@@ -189,8 +218,14 @@ function parseMatch(ev: any, teams: Record<string, Team>): Match | null {
   const vRaw = comp.venue ?? ev.venue
   let venue: string | undefined
   if (vRaw?.fullName) {
+    const fullName = String(vRaw.fullName)
+    // city arrives as "City, State Name" for US venues, "City" for Canada/Mexico —
+    // take the city, then append our own clean region code (see VENUE_REGION).
     const city = String(vRaw.address?.city ?? '').split(',')[0].trim()
-    venue = city ? `${vRaw.fullName} · ${city}` : vRaw.fullName
+    const region = VENUE_REGION[fullName]
+    venue = city
+      ? `${fullName} · ${city}${region ? `, ${region}` : ''}`
+      : fullName
   }
 
   return {

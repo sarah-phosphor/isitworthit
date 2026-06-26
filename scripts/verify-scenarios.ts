@@ -295,5 +295,29 @@ function multiPayload(groups: Group[], matches: Match[]): ScoresPayload {
   }
 }
 
+// ===== plain-language "alive" WHY (R4.1-3 — no "need a result" jargon) =====
+// A 3rd-placed, still-alive team facing an already-through side. The WHY must be
+// computed from the maths and must never use the insider phrase "a result".
+
+// F — a draw makes the top two mathematically impossible, a win keeps it reachable.
+{
+  const p = payload('F', [row('A', 4, 2, 1, { advanced: true }), row('C', 4, 2, 2), row('B', 2, 2, 3), row('D', 1, 2, 4)], [
+    upcoming('F', 'A', 'B', 1),
+    upcoming('F', 'C', 'D', 2),
+  ])
+  expect('F. win-only alive → "need to win"', whyFor(p, 'F1'), ['B need to win to reach the top two'])
+  expectNot('F2. no jargon', whyFor(p, 'F1'), ['a result', 'a draw is enough'])
+}
+
+// G — a draw still leaves the top two reachable: must say so, not demand a win.
+{
+  const p = payload('G', [row('A', 6, 2, 1, { advanced: true }), row('C', 4, 2, 2), row('B', 3, 2, 3), row('D', 0, 2, 4)], [
+    upcoming('G', 'A', 'B', 1),
+    upcoming('G', 'C', 'D', 2),
+  ])
+  expect('G. draw keeps them alive', whyFor(p, 'G1'), ['A draw keeps B in contention for the top two'])
+  expectNot('G2. no jargon', whyFor(p, 'G1'), ['a result', 'need to win'])
+}
+
 console.log(failures ? `\n${failures} FAILED` : '\nALL SCENARIO CHECKS PASS')
 if (failures) process.exit(1)

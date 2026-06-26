@@ -168,6 +168,41 @@ function resultClinchesTop2(ctx: QualContext, match: Match, teamId: string, gain
 const winClinches = (ctx: QualContext, m: Match, id: string) => resultClinchesTop2(ctx, m, id, 3)
 const drawClinches = (ctx: QualContext, m: Match, id: string) => resultClinchesTop2(ctx, m, id, 1)
 
+// Mirror of the clinch maths but for a team's FLOOR: can `teamId` still finish in
+// the top two if it takes `gain` (3 = win, 1 = draw) from this match? Best case for
+// them — they win every other game left; every rival loses every other game (the
+// direct opponent only banks this match's `oppGain`). A rival is "locked above"
+// only when even that floor clears the team's ceiling, so the result keeps a top-two
+// finish reachable while at most one rival is locked above. Top-two only (best thirds
+// can't be proven from points + GD), so a `false` here never asserts a team is out —
+// only that a top-two finish is gone.
+function resultKeepsTop2Possible(ctx: QualContext, match: Match, teamId: string, gain: number): boolean {
+  const g = match.group ? ctx.groupById.get(match.group) : undefined
+  const me = ctx.rowByTeam.get(teamId)
+  if (!g || !me) return true // can't disprove → assume still possible (under-claim)
+  const otherRem = remGamesFor(ctx, match.group, teamId) // includes this match
+  const myCeiling = me.pts + gain + 3 * Math.max(0, otherRem - 1)
+  const oppId = teamId === match.homeId ? match.awayId : match.homeId
+  const oppGain = gain === 3 ? 0 : gain
+  let lockedAbove = 0
+  for (const r of g.table) {
+    if (r.teamId === teamId) continue
+    const rivalFloor = r.pts + (r.teamId === oppId ? oppGain : 0)
+    if (rivalFloor > myCeiling) lockedAbove++
+  }
+  return lockedAbove <= 1
+}
+
+// Plain-English "what does this still-alive team need from the match" — replaces the
+// old "need a result" jargon. Anchored on the top two, which is provable from points;
+// it never claims a draw ends their tournament, since a best-third place can't be
+// ruled out from the feed.
+function aliveNeedPhrase(ctx: QualContext, match: Match, teamId: string, name: string): string {
+  if (resultKeepsTop2Possible(ctx, match, teamId, 1)) return `A draw keeps ${name} in contention for the top two.`
+  if (resultKeepsTop2Possible(ctx, match, teamId, 3)) return `${name} need to win to reach the top two.`
+  return `${name} need to win — and other results to go their way.`
+}
+
 // Teams still in contention in this match's group, excluding the two playing.
 // Safe to name: 'alive' is the engine's own ESPN-anchored status.
 function otherAliveNames(ctx: QualContext, match: Match): string[] {
@@ -457,8 +492,9 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
     } else if (hMsg && aMsg) {
       why = text(`${capitalize(hMsg)}. ${capitalize(aMsg)}.`)
     } else if (hMsg || aMsg) {
+      const chaserId = hMsg ? match.awayId : match.homeId
       const chaser = hMsg ? away : home
-      why = text(`${capitalize((hMsg ?? aMsg)!)}. ${chaser} need a result of their own.`)
+      why = text(`${capitalize((hMsg ?? aMsg)!)}. ${aliveNeedPhrase(ctx, match, chaserId, chaser)}`)
     } else if (others.length) {
       why = text(`${list([home, away, ...others])} are all chasing the spots.`)
     } else {
@@ -493,7 +529,7 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
       return {
         matters: 'Yes.',
         whatChanges: `Whether ${aliveName} can still reach the knockout rounds.`,
-        why: text(`${aliveName} need a result to stay alive.`),
+        why: text(aliveNeedPhrase(ctx, match, aliveId, aliveName)),
       }
     }
     return {

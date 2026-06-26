@@ -80,11 +80,11 @@ function Masthead({ view, off, nav, data }: { view: View; off: number; nav: Nav;
 
       {/* Matches view only: date stepper centered, "Updated X ago" right (item 3) */}
       {view === 'day' && (
-        <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 0 0' }}>
-          <div style={{ flex: '1 1 0', minWidth: 0 }} />
-          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 24 }}>
+        <nav className="wc-datebar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 0 0' }}>
+          <div className="wc-datebar-spacer" style={{ flex: '1 1 0', minWidth: 0 }} />
+          <div className="wc-datebar-steps" style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 24 }}>
             <span onClick={nav.prevDay} className="lk" style={stepLink}>‹ {relName(off - 1)}</span>
-            <div onClick={nav.goToday} style={{ cursor: 'pointer', textAlign: 'center', minWidth: 148, height: 38, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
+            <div onClick={nav.goToday} className="wc-datebar-date" style={{ cursor: 'pointer', textAlign: 'center', minWidth: 148, height: 38, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
               <div style={{ font: "500 15px 'Newsreader',serif", color: '#1c1a17', lineHeight: 1.05 }}>{fullLabel(off)}</div>
               <div style={{ font: "600 9px 'Instrument Sans',sans-serif", letterSpacing: '.2em', textTransform: 'uppercase', color: '#8a2b22', lineHeight: 1, minHeight: 9 }}>
                 {Math.abs(off) <= 1 ? relName(off) : ''}
@@ -92,7 +92,7 @@ function Masthead({ view, off, nav, data }: { view: View; off: number; nav: Nav;
             </div>
             <span onClick={nav.nextDay} className="lk" style={stepLink}>{relName(off + 1)} ›</span>
           </div>
-          <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="wc-datebar-fresh" style={{ flex: '1 1 0', minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>
             {data && <Freshness data={data} />}
           </div>
         </nav>
@@ -319,17 +319,11 @@ function Freshness({ data }: { data: ScoresPayload }) {
   )
 }
 
-// Explicit GA4 page_view on client-side route changes (the SPA navigates via the
-// History API; the initial load is already counted by gtag('config') in
-// index.html). NOTE: GA4 enhanced measurement may also auto-track History
-// changes — see the R4 flag re: possible double-count.
-function trackPageView(path: string) {
-  if (typeof window === 'undefined') return
-  const g = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag
-  if (typeof g === 'function') {
-    g('event', 'page_view', { page_path: path, page_location: window.location.href, page_title: document.title })
-  }
-}
+// GA4 page views on client-side navigation are handled by GA4 enhanced measurement,
+// which auto-tracks History API changes. We deliberately do NOT fire an explicit
+// gtag('event','page_view') here — doing so double-counts every in-app navigation on
+// top of the automatic one (R4.1-1). The initial load is counted by gtag('config')
+// in index.html.
 
 // ---------- app shell ----------
 
@@ -382,7 +376,6 @@ export function App() {
   useEffect(() => {
     const onPop = () => {
       applyPath(window.location.pathname)
-      trackPageView(window.location.pathname)
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
@@ -391,7 +384,6 @@ export function App() {
 
   const push = (p: string) => {
     window.history.pushState({}, '', p)
-    trackPageView(p)
   }
   const navTo = (updater: () => void, path: string) => {
     updater()

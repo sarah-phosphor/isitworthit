@@ -39,3 +39,15 @@ input::placeholder { color: #b0a99c; }
 /* whole-card link affordance */
 .mc-clickable { transition: box-shadow .15s ease, border-color .15s ease; }
 .mc-clickable:hover { box-shadow: 0 3px 14px rgba(0,0,0,.11); border-color: #d8d2c5; }
+
+/* Matches-view date stepper (R4.1-2). On narrow screens the centered stepper and
+   the right-aligned "Updated X ago" line overlapped; stack them so the stepper sits
+   on top and the freshness line drops below, centered. Target 360–500px. */
+@media (max-width: 520px) {
+  .wc-datebar { flex-direction: column; gap: 8px; }
+  .wc-datebar-spacer { display: none; }
+  .wc-datebar-steps { gap: 12px !important; }
+  .wc-datebar-date { min-width: 104px !important; }
+  .wc-datebar-fresh { flex: none !important; justify-content: center !important; text-align: center; }
+  .wc-datebar-fresh > span { white-space: normal !important; }
+}
