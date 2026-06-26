@@ -160,8 +160,8 @@ function roundFromSlug(slug: string): string | undefined {
 // the US state is buried inside `city` ("Foxborough, Massachusetts") and Canada/
 // Mexico carry no region at all. Rather than trust that inconsistent feed we map the
 // 16 known venues (keyed by ESPN's exact `fullName`). US/Canada use the standard
-// 2-letter code; Mexico has no 2-letter standard, so the recognizable region name is
-// used. A venue missing from the map just renders without a region.
+// 2-letter code; Mexico has no clean 2-letter state standard, so its venues use the
+// country code MX. A venue missing from the map just renders without a region.
 const VENUE_REGION: Record<string, string> = {
   // United States
   'SoFi Stadium': 'CA',
@@ -178,10 +178,10 @@ const VENUE_REGION: Record<string, string> = {
   // Canada
   'BMO Field': 'ON',
   'BC Place': 'BC',
-  // Mexico (no standard 2-letter code)
-  'Estadio Banorte': 'CDMX',
-  'Estadio Akron': 'Jalisco',
-  'Estadio BBVA': 'Nuevo León',
+  // Mexico — use the country code MX (no clean 2-letter state standard)
+  'Estadio Banorte': 'MX',
+  'Estadio Akron': 'MX',
+  'Estadio BBVA': 'MX',
 }
 
 function parseMatch(ev: any, teams: Record<string, Team>): Match | null {
