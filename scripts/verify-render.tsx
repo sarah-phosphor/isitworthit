@@ -43,7 +43,9 @@ const tname = p.groups[0].table[0].name
 
 const mid = p.matches.find((m) => m.group)?.id ?? p.matches[0].id
 
-check('DayView', <DayView off={0} ctx={ctx} nav={nav} />, ['Does it matter', 'What changes'])
+// tense-agnostic: "it matter?" covers Does/Did, "Why?" is always present (a given
+// day's games may all be completed once the group stage ends)
+check('DayView', <DayView off={0} ctx={ctx} nav={nav} />, ['it matter?', 'Why?'])
 check('GroupView', <GroupView groupId={gid} ctx={ctx} nav={nav} />, [`Group ${gid}`, 'Pts', 'Matches'])
 check('TeamView', <TeamView teamId={tid} ctx={ctx} nav={nav} />, [tname, 'Current status', 'Past matches'])
 check('MatchView', <MatchView matchId={mid} ctx={ctx} nav={nav} />, ['it matter?'])

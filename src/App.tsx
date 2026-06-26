@@ -65,20 +65,11 @@ function Masthead({ view, off, nav, data }: { view: View; off: number; nav: Nav;
     whiteSpace: 'nowrap' as const,
   }
   return (
-    <header style={{ padding: '42px 0 0' }}>
-      <div onClick={nav.goToday} style={{ cursor: 'pointer', display: 'inline-block' }}>
-        <h1 style={{ margin: 0, font: "500 33px/1.04 'Newsreader',serif", letterSpacing: '-.015em', color: '#1c1a17' }}>
-          World Cup{' '}
-          <span style={{ fontStyle: 'italic', fontWeight: 400, color: '#6b6660' }}>
-            for Non-
-            <span style={{ textDecoration: 'line-through', textDecorationColor: '#8a2b22', textDecorationThickness: 2, textUnderlineOffset: 2 }}>Soccer</span>{' '}
-            <span style={{ display: 'inline-block', transform: 'rotate(-5deg)', fontStyle: 'italic', fontWeight: 600, color: '#8a2b22' }}>Football</span>{' '}
-            Fans
-          </span>
-        </h1>
-      </div>
-      <p style={{ margin: '9px 0 0', font: "400 17px 'Newsreader',serif", color: '#6b6660' }}>Every game, translated.</p>
-      <div style={{ height: 1, background: '#ddd7ca', margin: '14px 0 0' }} />
+    <header style={{ padding: '38px 0 0' }}>
+      {/* minimal intro — no links here; navigation is the tabs below (R4-3) */}
+      <h1 style={{ margin: 0, font: "500 28px/1.1 'Newsreader',serif", letterSpacing: '-.015em', color: '#1c1a17' }}>Does it matter?</h1>
+      <p style={{ margin: '6px 0 0', font: "400 15px 'Newsreader',serif", color: '#6b6660' }}>World Cup stakes, explained normally.</p>
+      <div style={{ height: 1, background: '#ddd7ca', margin: '16px 0 0' }} />
 
       {/* persistent tabs — identical on every page (item 3) */}
       <nav style={{ display: 'flex', alignItems: 'center', gap: 28, padding: '9px 0' }}>
@@ -328,6 +319,18 @@ function Freshness({ data }: { data: ScoresPayload }) {
   )
 }
 
+// Explicit GA4 page_view on client-side route changes (the SPA navigates via the
+// History API; the initial load is already counted by gtag('config') in
+// index.html). NOTE: GA4 enhanced measurement may also auto-track History
+// changes — see the R4 flag re: possible double-count.
+function trackPageView(path: string) {
+  if (typeof window === 'undefined') return
+  const g = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag
+  if (typeof g === 'function') {
+    g('event', 'page_view', { page_path: path, page_location: window.location.href, page_title: document.title })
+  }
+}
+
 // ---------- app shell ----------
 
 export function App() {
@@ -377,13 +380,19 @@ export function App() {
 
   // browser back/forward
   useEffect(() => {
-    const onPop = () => applyPath(window.location.pathname)
+    const onPop = () => {
+      applyPath(window.location.pathname)
+      trackPageView(window.location.pathname)
+    }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
-  const push = (p: string) => window.history.pushState({}, '', p)
+  const push = (p: string) => {
+    window.history.pushState({}, '', p)
+    trackPageView(p)
+  }
   const navTo = (updater: () => void, path: string) => {
     updater()
     push(path)
