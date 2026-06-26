@@ -29,7 +29,7 @@ const TONE: Record<Status, string> = {
 }
 
 export interface Editorial {
-  matters: string // 'Yes.' | 'Somewhat.' | 'Not really.'
+  matters: string // binary verdict: 'Yes.' | 'No.'
   whatChanges: string // tense matches the match state
   why: Gloss
 }
@@ -217,17 +217,30 @@ function rankPhrase(rank: number, complete: boolean): string {
     case 2:
       return 'finished second and went through'
     case 3:
-      return 'finished third'
+      // only reached for a 'through' team (outcomeClause) — a rank-3 side that
+      // advanced is a best-third qualifier; don't leave "third" reading as out
+      return 'finished third but went through as a best third'
     default:
       return 'finished bottom'
   }
+}
+
+// Short best-third consequence for a third-placed team, reusing the team-page
+// outlook (item 1) so the completed card and the team page can't contradict.
+function bestThirdTag(ctx: QualContext, id: string): string {
+  const o = teamNextOutlook(id, ctx)
+  if (o.tone === 'through') return ' and through as a best third'
+  if (o.tone === 'out') return ' but edged out of the best-third places'
+  if (o.tone === 'race') return ' — still alive in the best-third race'
+  return ' — waiting on other groups'
 }
 
 function outcomeClause(ctx: QualContext, id: string, name: string, complete: boolean): string {
   const s = statusOf(ctx, id)
   const r = ctx.rowByTeam.get(id)
   if (s === 'through') return `${name} ${complete && r ? rankPhrase(r.rank, true) : 'are through'}`
-  if (s === 'alive') return complete ? `${name} finished third` : `${name} are still in it`
+  // third place doesn't mean out — say what it actually means (item 1)
+  if (s === 'alive') return complete ? `${name} finished third${bestThirdTag(ctx, id)}` : `${name} are still in it`
   if (s === 'out') return `${name} are out`
   return `${name} ${r ? rankPhrase(r.rank, complete) : 'are still in it'}`
 }
@@ -375,9 +388,9 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
 
   // ----- completed group match (safe, status-anchored) -----
   if (completed && score) {
-    let matters = 'Yes.'
-    if (bothOut) matters = 'Not really.'
-    else if (oneThroughOneOut) matters = 'Somewhat.'
+    // binary verdict (item 2): No only when advancement was fully settled — both
+    // ended out, or both through (so the game decided seeding only). Else Yes.
+    const matters = bothOut || bothThrough ? 'No.' : 'Yes.'
     const w = score.home > score.away ? home : score.home < score.away ? away : null
 
     const whatChanges = bothOut
@@ -402,14 +415,14 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
   // ----- upcoming / live group match -----
   if (bothOut) {
     return {
-      matters: 'Not really.',
+      matters: 'No.',
       whatChanges: 'Nothing — both teams are already out.',
       why: text(`Neither ${home} nor ${away} can reach the knockouts.`),
     }
   }
   if (oneThroughOneOut) {
     return {
-      matters: 'Not really.',
+      matters: 'No.',
       whatChanges: `Not much — ${throughName} are through and ${outName} are out.`,
       why: text(`${throughName} qualified. ${outName} eliminated.`),
     }
@@ -417,7 +430,7 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
   if (bothThrough) {
     const decides = topTwoMeeting(ctx, match)
     return {
-      matters: 'Somewhat.',
+      matters: 'No.',
       whatChanges: decides ? `Who finishes first in Group ${match.group}.` : `Final seeding in Group ${match.group}.`,
       why: levelOnPoints(ctx, match)
         ? tip('Both already through, level on points. ', 'Goal difference', ' decides who gets the easier draw.', 'goalDifference')
@@ -471,7 +484,7 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
           ? text(`A win sends ${aliveName} through.`)
           : text(`${aliveName} sit in a qualifying spot. Not safe yet.`)
       return {
-        matters: 'Somewhat.',
+        matters: 'Yes.',
         whatChanges: `Whether ${aliveName} go through.`,
         why,
       }

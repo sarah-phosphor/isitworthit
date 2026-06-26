@@ -132,7 +132,7 @@ export function buildCard(
     venue: match.venue ?? '',
     matterLabel: isCompleted ? 'Did it matter?' : 'Does it matter?',
     matters: e.matters,
-    matterColor: /^Yes/.test(e.matters) ? OXBLOOD : '#1c1a17',
+    matterColor: /^Yes/.test(e.matters) ? OXBLOOD : '#8a857d', // Yes oxblood, No muted grey (item 2)
     changeLabel: isCompleted ? 'What changed?' : 'What changes?',
     whatChanges: e.whatChanges,
     whyGloss: gloss(e.why),

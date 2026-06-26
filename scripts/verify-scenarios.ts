@@ -18,6 +18,9 @@ function row(teamId: string, pts: number, played: number, rank: number, opts: Pa
 function upcoming(group: string, homeId: string, awayId: string, n: number): Match {
   return { id: `${group}${n}`, stage: 'group', group, state: 'upcoming', dateISO: D, homeId, awayId, home: homeId, away: awayId }
 }
+function completed(group: string, homeId: string, awayId: string, n: number, score: { home: number; away: number }): Match {
+  return { id: `${group}${n}`, stage: 'group', group, state: 'completed', dateISO: D, homeId, awayId, home: homeId, away: awayId, score }
+}
 function payload(group: string, rows: GroupRow[], fixtures: Match[]): ScoresPayload {
   const teams: Record<string, Team> = {}
   for (const r of rows) teams[r.teamId] = { id: r.teamId, name: r.teamId, group }
@@ -214,6 +217,82 @@ function expectNot(label: string, got: string, banned: string[]) {
     ...Array.from({ length: 3 }, (_, i) => mkGroup(`L${i}`, { pts: 2, gd: 0 }, true)),
   ]
   expectOutlook('BT6 tie at cut-off → goals-scored, undecided', outlookFor(groups, 'TARGET'), 'race', ['goals scored'], ['are through', 'Knocked out', 'out only if'])
+}
+
+// ===== binary verdict + 3rd-place consequence (R3.3) =====
+function mattersFor(p: ScoresPayload, matchId: string): string {
+  return editorialFor(p.matches.find((x) => x.id === matchId)!, buildContext(p)).matters
+}
+function expectMatters(label: string, got: string, want: string) {
+  if (got !== want) {
+    console.log(`FAIL  ${label} — matters="${got}" want "${want}"`)
+    failures++
+  } else {
+    console.log(`PASS  ${label} [${got}]`)
+  }
+}
+function multiPayload(groups: Group[], matches: Match[]): ScoresPayload {
+  const teams: Record<string, Team> = {}
+  for (const g of groups) for (const r of g.table) teams[r.teamId] = { id: r.teamId, name: r.teamId, group: g.id }
+  return { generatedAt: D, source: 'espn', teams, groups, matches }
+}
+
+// upcoming verdicts — advancement settled = No, still-live = Yes
+{
+  const p = payload('V', [
+    row('A', 6, 2, 1, { advanced: true }),
+    row('B', 6, 2, 2, { advanced: true }),
+    row('C', 0, 2, 3, { statusNote: 'Eliminated' }),
+    row('D', 0, 2, 4, { statusNote: 'Eliminated' }),
+  ], [upcoming('V', 'A', 'B', 1), upcoming('V', 'C', 'D', 2), upcoming('V', 'A', 'C', 3)])
+  expectMatters('V1 upcoming both through → No (seeding only)', mattersFor(p, 'V1'), 'No.')
+  expectMatters('V2 upcoming both out → No', mattersFor(p, 'V2'), 'No.')
+  expectMatters('V3 upcoming through vs out → No', mattersFor(p, 'V3'), 'No.')
+}
+{
+  const p = payload('W', [row('A', 3, 2, 1), row('B', 3, 2, 2), row('C', 1, 2, 3), row('D', 1, 2, 4)], [upcoming('W', 'A', 'B', 1)])
+  expectMatters('W1 upcoming both alive → Yes', mattersFor(p, 'W1'), 'Yes.')
+}
+
+// completed verdicts + the 3rd-place consequence (item 1)
+{
+  const p = payload('X', [row('A', 9, 3, 1), row('B', 6, 3, 2), row('C', 3, 3, 3), row('D', 0, 3, 4)], [
+    completed('X', 'A', 'B', 1, { home: 1, away: 0 }),
+    completed('X', 'A', 'D', 2, { home: 2, away: 0 }),
+  ])
+  expectMatters('X1 completed both through → No', mattersFor(p, 'X1'), 'No.')
+  expectMatters('X2 completed through vs out → Yes', mattersFor(p, 'X2'), 'Yes.')
+}
+{
+  // a third-placed team that ESPN already flags through (best-third) must read as through, not dangling
+  const p = payload('Y', [row('A', 9, 3, 1), row('B', 6, 3, 2), row('C', 4, 3, 3, { advanced: true }), row('D', 0, 3, 4)], [
+    completed('Y', 'B', 'C', 1, { home: 0, away: 0 }),
+  ])
+  const ed = editorialFor(p.matches[0], buildContext(p))
+  expectMatters('Y1 completed both-through incl best-third → No', ed.matters, 'No.')
+  if (!ed.whatChanges.includes('went through as a best third')) {
+    console.log(`FAIL  Y1b through-3rd consequence — "${ed.whatChanges}"`); failures++
+  } else {
+    console.log(`PASS  Y1b through-3rd reads as through\n        "${ed.whatChanges}"`)
+  }
+}
+{
+  // an alive third-placed team, still in the race, in a COMPLETED card → "still alive in the best-third race"
+  const groups = [
+    mkGroup('TG', { pts: 3, gd: -1 }, true, 'TARGET'),
+    mkGroup('U1', { pts: 4, gd: 0 }, true),
+    mkGroup('U2', { pts: 4, gd: 0 }, true),
+    mkGroup('U3', { pts: 4, gd: -1 }, true),
+    ...fillers('P', 7, { pts: 0, gd: 0 }, false),
+  ]
+  const m = completed('TG', 'TARGET', 'TG4', 1, { home: 2, away: 0 }) // TG4 = rank-4 of TG (out)
+  const ed = editorialFor(m, buildContext(multiPayload(groups, [m])))
+  expectMatters('I1 completed 3rd-in-race → Yes', ed.matters, 'Yes.')
+  if (!ed.whatChanges.includes('still alive in the best-third race')) {
+    console.log(`FAIL  I1b alive-3rd consequence — "${ed.whatChanges}"`); failures++
+  } else {
+    console.log(`PASS  I1b alive-3rd reads as still in the race\n        "${ed.whatChanges}"`)
+  }
 }
 
 console.log(failures ? `\n${failures} FAILED` : '\nALL SCENARIO CHECKS PASS')
