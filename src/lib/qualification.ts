@@ -247,8 +247,8 @@ function resultKeepsTop2Possible(ctx: QualContext, match: Match, teamId: string,
 // ruled out from the feed.
 function aliveNeedPhrase(ctx: QualContext, match: Match, teamId: string, name: string): string {
   if (resultKeepsTop2Possible(ctx, match, teamId, 1)) return `A draw keeps ${name} in contention for the top two.`
-  if (resultKeepsTop2Possible(ctx, match, teamId, 3)) return `${name} need to win to reach the top two.`
-  return `${name} need to win — and other results to go their way.`
+  if (resultKeepsTop2Possible(ctx, match, teamId, 3)) return `${name} needs to win to reach the top two.`
+  return `${name} needs to win — and other results to go its way.`
 }
 
 // Teams still in contention in this match's group, excluding the two playing.
@@ -293,7 +293,7 @@ export function formProbabilities(ctx: QualContext, match: Match) {
 }
 
 function rankPhrase(rank: number, complete: boolean): string {
-  if (!complete) return 'are in the mix'
+  if (!complete) return 'is in the mix'
   switch (rank) {
     case 1:
       return 'won the group'
@@ -321,11 +321,11 @@ function bestThirdTag(ctx: QualContext, id: string): string {
 function outcomeClause(ctx: QualContext, id: string, name: string, complete: boolean): string {
   const s = statusOf(ctx, id)
   const r = ctx.rowByTeam.get(id)
-  if (s === 'through') return `${name} ${complete && r ? rankPhrase(r.rank, true) : 'are through'}`
+  if (s === 'through') return `${name} ${complete && r ? rankPhrase(r.rank, true) : 'is through'}`
   // third place doesn't mean out — say what it actually means (item 1)
-  if (s === 'alive') return complete ? `${name} finished third${bestThirdTag(ctx, id)}` : `${name} are still in it`
-  if (s === 'out') return `${name} are out`
-  return `${name} ${r ? rankPhrase(r.rank, complete) : 'are still in it'}`
+  if (s === 'alive') return complete ? `${name} finished third${bestThirdTag(ctx, id)}` : `${name} is still in it`
+  if (s === 'out') return `${name} is out`
+  return `${name} ${r ? rankPhrase(r.rank, complete) : 'is still in it'}`
 }
 
 // ---------- public copy builders ----------
@@ -394,7 +394,7 @@ export function teamNextOutlook(teamId: string, ctx: QualContext): NextOutlook {
   const s = statusOf(ctx, teamId)
   const name = ctx.payload.teams[teamId]?.name ?? ctx.rowByTeam.get(teamId)?.name ?? 'This team'
   if (s === 'out') return { tone: 'out', line: 'Knocked out — no more games.' }
-  if (s === 'through') return { tone: 'through', line: `${name} are through — waiting on the knockout draw.` }
+  if (s === 'through') return { tone: 'through', line: `${name} is through — waiting on the knockout draw.` }
 
   const row = ctx.rowByTeam.get(teamId)
   const grp = ctx.payload.teams[teamId]?.group
@@ -412,7 +412,7 @@ export function teamNextOutlook(teamId: string, ctx: QualContext): NextOutlook {
       return { tone: 'out', line: `Knocked out — ${name} finished outside the best ${BEST_THIRDS} third-placed teams.` }
     }
     if (couldBeAbove + pending < BEST_THIRDS) {
-      return { tone: 'through', line: `${name} are through as one of the best ${BEST_THIRDS} third-placed teams.` }
+      return { tone: 'through', line: `${name} is through as one of the best ${BEST_THIRDS} third-placed teams.` }
     }
 
     const kElim = BEST_THIRDS - strictlyAbove // this many pending groups must out-third them to eliminate
@@ -420,9 +420,9 @@ export function teamNextOutlook(teamId: string, ctx: QualContext): NextOutlook {
     if (kElim > pending) {
       // pending results alone can't push them out — it comes down to the goals-scored tiebreak
       const tail = pending > 0 ? `goals scored and the last ${pending} ${pending === 1 ? 'group' : 'groups'}` : 'goals scored'
-      return { tone: 'race', line: `${name} finished third in Group ${grp} on ${pts}. Level with other thirds on points and goal difference — their place hinges on ${tail}.` }
+      return { tone: 'race', line: `${name} finished third in Group ${grp} on ${pts}. Level with other thirds on points and goal difference — its place hinges on ${tail}.` }
     }
-    const aboveTxt = strictlyAbove === 0 ? 'none above them yet' : `${strictlyAbove} third${strictlyAbove === 1 ? '' : 's'} above`
+    const aboveTxt = strictlyAbove === 0 ? 'none above it yet' : `${strictlyAbove} third${strictlyAbove === 1 ? '' : 's'} above`
     return {
       tone: 'race',
       line: `${name} finished third in Group ${grp} on ${pts} — ${aboveTxt}, ${pending} ${pending === 1 ? 'group' : 'groups'} left. Best ${BEST_THIRDS} thirds advance; out only if ${kElim}+ of those finish with a better third.`,
@@ -445,10 +445,10 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
       const w = score.home > score.away ? home : score.home < score.away ? away : null
       return {
         matters: 'Yes.',
-        whatChanges: w ? `${w} went through; ${w === home ? away : home} are out.` : 'It was settled after 90 minutes.',
+        whatChanges: w ? `${w} went through; ${w === home ? away : home} is out.` : 'It was settled after 90 minutes.',
         why: text(
           w
-            ? `${w} advance. ${w === home ? away : home} go home.`
+            ? `${w} advances. ${w === home ? away : home} goes home.`
             : 'Level after 90. Decided in extra time or penalties.',
         ),
       }
@@ -491,8 +491,8 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
         whatChanges = `Only the seeding — both were already through in Group ${match.group}.`
         why = text('Both had already qualified; this just set the order.')
       } else if (oneThroughOneOut) {
-        whatChanges = `Nothing was riding on it — ${throughName} were already through and ${outName} already out.`
-        why = text(`${throughName} had qualified and ${outName} were eliminated before kickoff.`)
+        whatChanges = `Nothing was riding on it — ${throughName} was already through and ${outName} already out.`
+        why = text(`${throughName} had qualified and ${outName} was eliminated before kickoff.`)
       } else {
         whatChanges = 'Nothing — the group was already settled before kickoff.'
         why = text('Neither side’s place could have changed.')
@@ -523,7 +523,7 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
   if (oneThroughOneOut) {
     return {
       matters: 'No.',
-      whatChanges: `Not much — ${throughName} are through and ${outName} are out.`,
+      whatChanges: `Not much — ${throughName} is through and ${outName} is out.`,
       why: text(`${throughName} qualified. ${outName} eliminated.`),
     }
   }
@@ -583,10 +583,10 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
         ? text(`A draw is enough for ${aliveName}.`)
         : w
           ? text(`A win sends ${aliveName} through.`)
-          : text(`${aliveName} sit in a qualifying spot. Not safe yet.`)
+          : text(`${aliveName} sits in a qualifying spot. Not safe yet.`)
       return {
         matters: 'Yes.',
-        whatChanges: `Whether ${aliveName} go through.`,
+        whatChanges: `Whether ${aliveName} goes through.`,
         why,
       }
     }
@@ -600,7 +600,7 @@ export function editorialFor(match: Match, ctx: QualContext): Editorial {
     return {
       matters: 'Yes.',
       whatChanges: `Whether ${aliveName} can still sneak through.`,
-      why: text(`${aliveName} need a big win and other results to fall their way.`),
+      why: text(`${aliveName} needs a big win and other results to fall its way.`),
     }
   }
   // early / not-yet-resolved group

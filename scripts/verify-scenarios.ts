@@ -146,7 +146,7 @@ function expectNot(label: string, got: string, banned: string[]) {
     upcoming('E', 'C', 'D', 2),
   ])
   expect('5. alive-in-spot win clinch (WHY)', whyFor(p, 'E1'), ['win sends A through'])
-  expect('5b. clean headline', changesFor(p, 'E1'), ['Whether A go through'])
+  expect('5b. clean headline', changesFor(p, 'E1'), ['Whether A goes through'])
 }
 
 // ===== best-third-place outlook (item 4 — the heavy one) =====
@@ -164,7 +164,7 @@ function expectNot(label: string, got: string, banned: string[]) {
     mkGroup('B1', { pts: 3, gd: -3 }, true),
     ...fillers('P', 7, { pts: 0, gd: 0 }, false),
   ]
-  expectOutlook('BT1 in-race (3 above, 7 pending)', outlookFor(groups, 'TARGET'), 'race', ['out only if 5+', '7 groups'], ['are through', 'Knocked out'])
+  expectOutlook('BT1 in-race (3 above, 7 pending)', outlookFor(groups, 'TARGET'), 'race', ['out only if 5+', '7 groups'], ['is through', 'Knocked out'])
 }
 
 // BT2 — provably OUT: 8 third-placed teams strictly above it, can't be caught.
@@ -174,7 +174,7 @@ function expectNot(label: string, got: string, banned: string[]) {
     ...Array.from({ length: 8 }, (_, i) => mkGroup(`A${i}`, { pts: 3, gd: 0 }, true)),
     ...fillers('P', 3, { pts: 0, gd: 0 }, false),
   ]
-  expectOutlook('BT2 provably out (8 above)', outlookFor(groups, 'TARGET'), 'out', ['outside the best 8'], ['out only if', 'are through'])
+  expectOutlook('BT2 provably out (8 above)', outlookFor(groups, 'TARGET'), 'out', ['outside the best 8'], ['out only if', 'is through'])
 }
 
 // BT3 — provably THROUGH: best third, too few groups left to bump it out.
@@ -216,7 +216,7 @@ function expectNot(label: string, got: string, banned: string[]) {
     mkGroup('TIE', { pts: 3, gd: -1 }, true),
     ...Array.from({ length: 3 }, (_, i) => mkGroup(`L${i}`, { pts: 2, gd: 0 }, true)),
   ]
-  expectOutlook('BT6 tie at cut-off → goals-scored, undecided', outlookFor(groups, 'TARGET'), 'race', ['goals scored'], ['are through', 'Knocked out', 'out only if'])
+  expectOutlook('BT6 tie at cut-off → goals-scored, undecided', outlookFor(groups, 'TARGET'), 'race', ['goals scored'], ['is through', 'Knocked out', 'out only if'])
 }
 
 // ===== binary verdict + 3rd-place consequence (R3.3) =====
@@ -305,7 +305,7 @@ function multiPayload(groups: Group[], matches: Match[]): ScoresPayload {
     upcoming('F', 'A', 'B', 1),
     upcoming('F', 'C', 'D', 2),
   ])
-  expect('F. win-only alive → "need to win"', whyFor(p, 'F1'), ['B need to win to reach the top two'])
+  expect('F. win-only alive → "needs to win"', whyFor(p, 'F1'), ['B needs to win to reach the top two'])
   expectNot('F2. no jargon', whyFor(p, 'F1'), ['a result', 'a draw is enough'])
 }
 
@@ -316,7 +316,7 @@ function multiPayload(groups: Group[], matches: Match[]): ScoresPayload {
     upcoming('G', 'C', 'D', 2),
   ])
   expect('G. draw keeps them alive', whyFor(p, 'G1'), ['A draw keeps B in contention for the top two'])
-  expectNot('G2. no jargon', whyFor(p, 'G1'), ['a result', 'need to win'])
+  expectNot('G2. no jargon', whyFor(p, 'G1'), ['a result', 'needs to win'])
 }
 
 console.log(failures ? `\n${failures} FAILED` : '\nALL SCENARIO CHECKS PASS')

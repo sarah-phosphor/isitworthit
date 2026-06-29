@@ -78,12 +78,16 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
   const nameLen = card.homeName.length + card.awayName.length
   const titleSize = Math.max(19, Math.min(27, Math.floor(470 / (nameLen + 4))))
   const flagH = Math.round(titleSize * 0.72)
+  // tile background by state (scheme E — no red/green, those read as win/loss):
+  // live runs deep gold ("now"), upcoming a warm grey, a finished game keeps the
+  // neutral default. (Sarah, 2026-06-29)
+  const bg = card.isLive ? '#f2e4c0' : card.isUpcoming ? '#eceae3' : '#f8f6f0'
   return (
     <article
       onClick={linkToMatch ? card.openMatch : undefined}
       className={linkToMatch ? 'mc-clickable' : undefined}
       style={{
-        background: '#f8f6f0',
+        background: bg,
         border: '1px solid #e6e1d6',
         boxShadow: '0 1px 3px rgba(0,0,0,.07)',
         padding: '26px 28px 24px',
@@ -196,31 +200,65 @@ export function MatchCard({ card, linkToMatch = true }: { card: CardVM; linkToMa
 
       <div style={{ height: 1, background: '#e6e1d6', margin: '18px 0 16px' }} />
 
-      {/* does it matter (stacked, like the other two — R2-5) */}
-      <div style={{ marginBottom: SECTION }}>
-        <div style={{ ...LBL, marginBottom: 5 }}>{card.matterLabel}</div>
-        <div style={{ font: "600 18px 'Newsreader',serif", color: card.matterColor }}>{card.matters}</div>
-      </div>
+      {card.predictionWhy ? (
+        // Knockout card: every game matters, so lead with the Expected result and
+        // explain why that's the prediction; the stakes line follows. (Sarah, 2026-06-29)
+        <>
+          {card.hasChances && (
+            <div style={{ marginBottom: SECTION }}>
+              <div style={{ ...LBL, marginBottom: 9 }}>Expected result</div>
+              <Bar chances={card.chances} />
+            </div>
+          )}
+          <div>
+            <div style={{ ...LBL, marginBottom: 5 }}>Why?</div>
+            <div style={BODY}>{card.predictionWhy}</div>
+          </div>
+        </>
+      ) : card.koResult ? (
+        // Finished knockout game: lead with the result (no moot verdict), keep the
+        // Expected result bar so you can see how the odds had it.
+        <>
+          <div style={{ marginBottom: SECTION }}>
+            <div style={{ ...LBL, marginBottom: 5 }}>Result</div>
+            <div style={{ font: "600 18px 'Newsreader',serif", color: '#1c1a17' }}>{card.koResult}</div>
+          </div>
+          {card.hasChances && (
+            <div style={{ marginTop: 'auto' }}>
+              <div style={{ ...LBL, marginBottom: 9 }}>Expected result</div>
+              <Bar chances={card.chances} />
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {/* does it matter (stacked, like the other two — R2-5) */}
+          <div style={{ marginBottom: SECTION }}>
+            <div style={{ ...LBL, marginBottom: 5 }}>{card.matterLabel}</div>
+            <div style={{ font: "600 18px 'Newsreader',serif", color: card.matterColor }}>{card.matters}</div>
+          </div>
 
-      {/* what changes */}
-      <div style={{ marginBottom: SECTION }}>
-        <div style={{ ...LBL, marginBottom: 5 }}>{card.changeLabel}</div>
-        <div style={{ font: "500 19px/1.38 'Newsreader',serif", color: '#1c1a17' }}>{card.whatChanges}</div>
-      </div>
+          {/* what changes */}
+          <div style={{ marginBottom: SECTION }}>
+            <div style={{ ...LBL, marginBottom: 5 }}>{card.changeLabel}</div>
+            <div style={{ font: "500 19px/1.38 'Newsreader',serif", color: '#1c1a17' }}>{card.whatChanges}</div>
+          </div>
 
-      {/* why */}
-      <div style={{ marginBottom: SECTION }}>
-        <div style={{ ...LBL, marginBottom: 5 }}>Why?</div>
-        <GlossLine g={card.whyGloss} style={BODY} />
-      </div>
+          {/* why */}
+          <div style={{ marginBottom: SECTION }}>
+            <div style={{ ...LBL, marginBottom: 5 }}>Why?</div>
+            <GlossLine g={card.whyGloss} style={BODY} />
+          </div>
 
-      {/* expected result — shown on every state incl. completed (R3-3); pinned to
-          the bottom so bars align across a row (R2-3) */}
-      {card.hasChances && (
-        <div style={{ marginTop: 'auto' }}>
-          <div style={{ ...LBL, marginBottom: 9 }}>Expected result</div>
-          <Bar chances={card.chances} />
-        </div>
+          {/* expected result — shown on every state incl. completed (R3-3); pinned to
+              the bottom so bars align across a row (R2-3) */}
+          {card.hasChances && (
+            <div style={{ marginTop: 'auto' }}>
+              <div style={{ ...LBL, marginBottom: 9 }}>Expected result</div>
+              <Bar chances={card.chances} />
+            </div>
+          )}
+        </>
       )}
     </article>
   )

@@ -40,6 +40,30 @@ input::placeholder { color: #b0a99c; }
 .mc-clickable { transition: box-shadow .15s ease, border-color .15s ease; }
 .mc-clickable:hover { box-shadow: 0 3px 14px rgba(0,0,0,.11); border-color: #d8d2c5; }
 
+/* knockout bracket (Knockouts tab). Mirrored two-sided tree with winner-feeds-
+   forward connectors. Cells are flex:1 (equal height) so a pair's midpoint lands
+   on the next round's cell centre — that's what makes the elbows line up. A
+   feeding column draws its OUTGOING line only (horizontal stub across the gap +
+   half a vertical "bus" per cell); the receiving cell's edge meets the bus. */
+.kbr { display: flex; align-items: stretch; gap: 10px; }
+.kbr-col { display: flex; flex-direction: column; }
+.kbr-col.flex { flex: 1 1 0; }
+.kbr-col.fixed { flex: 0 0 auto; }
+.kbr-head { height: 20px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; }
+.kbr-body { flex: 1; display: flex; flex-direction: column; }
+.kbr-cell { flex: 1 1 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.kbr-pad { width: 100%; }
+/* left half — connectors exit right */
+.kbr-feedR > .kbr-body > .kbr-cell::before { content: ''; position: absolute; left: 100%; top: 50%; width: 10px; height: 1px; background: #cfc8ba; }
+.kbr-feedR.pairs > .kbr-body > .kbr-cell::after { content: ''; position: absolute; left: calc(100% + 10px); width: 1px; height: 50%; background: #cfc8ba; }
+.kbr-feedR.pairs > .kbr-body > .kbr-cell:nth-child(odd)::after { top: 50%; }
+.kbr-feedR.pairs > .kbr-body > .kbr-cell:nth-child(even)::after { top: 0; }
+/* right half — connectors exit left */
+.kbr-feedL > .kbr-body > .kbr-cell::before { content: ''; position: absolute; right: 100%; top: 50%; width: 10px; height: 1px; background: #cfc8ba; }
+.kbr-feedL.pairs > .kbr-body > .kbr-cell::after { content: ''; position: absolute; right: calc(100% + 10px); width: 1px; height: 50%; background: #cfc8ba; }
+.kbr-feedL.pairs > .kbr-body > .kbr-cell:nth-child(odd)::after { top: 50%; }
+.kbr-feedL.pairs > .kbr-body > .kbr-cell:nth-child(even)::after { top: 0; }
+
 /* Matches-view date stepper (R4.1-2). On narrow screens the centered stepper and
    the right-aligned "Updated X ago" line overlapped; stack them so the stepper sits
    on top and the freshness line drops below, centered. Target 360–500px. */

@@ -8,16 +8,18 @@ import { slugify } from './lib/search'
 import { isoForTeam } from './lib/flags'
 import { MatchCard } from './components/MatchCard'
 import { StandingsTable } from './components/StandingsTable'
+import { KnockoutsView } from './components/Bracket'
 import { Flag } from './components/Flag'
 
-type View = 'day' | 'standings' | 'group' | 'team' | 'match'
+type View = 'day' | 'standings' | 'knockouts' | 'group' | 'team' | 'match'
 
 interface Nav {
   openTeam: (id: string) => void
   openGroup: (id: string) => void
   openMatch: (id: string) => void
   goToday: () => void
-  goStandings: () => void
+  goGroups: () => void
+  goKnockouts: () => void
   prevDay: () => void
   nextDay: () => void
 }
@@ -48,13 +50,15 @@ function teamPast(teamId: string, p: ScoresPayload): string[] {
 
 function Masthead({ view, off, nav, data }: { view: View; off: number; nav: Nav; data: ScoresPayload | null }) {
   const matchesActive = view === 'day' || view === 'match'
-  const standingsActive = view === 'standings' || view === 'group' || view === 'team'
-  const tab = (active: boolean): CSSProperties => ({
+  const groupsActive = view === 'standings' || view === 'group' || view === 'team'
+  const knockoutsActive = view === 'knockouts'
+  // `dim` lightens a tab to signal a finished stage (the group stage is over).
+  const tab = (active: boolean, dim = false): CSSProperties => ({
     cursor: 'pointer',
     font: "500 14px 'Instrument Sans',sans-serif",
     letterSpacing: '.03em',
     paddingBottom: 5,
-    color: active ? '#1c1a17' : '#8a857d',
+    color: active ? (dim ? '#6b6660' : '#1c1a17') : dim ? '#b0a99c' : '#8a857d',
     borderBottom: `2px solid ${active ? '#8a2b22' : 'transparent'}`,
   })
   const stepLink = {
@@ -74,7 +78,8 @@ function Masthead({ view, off, nav, data }: { view: View; off: number; nav: Nav;
       {/* persistent tabs — identical on every page (item 3) */}
       <nav style={{ display: 'flex', alignItems: 'center', gap: 28, padding: '9px 0' }}>
         <span onClick={nav.goToday} style={tab(matchesActive)}>Matches</span>
-        <span onClick={nav.goStandings} style={tab(standingsActive)}>Standings</span>
+        <span onClick={nav.goKnockouts} style={tab(knockoutsActive)}>Knockout Stage</span>
+        <span onClick={nav.goGroups} style={tab(groupsActive, true)}>Group Stage</span>
       </nav>
       <div style={{ height: 1, background: '#ddd7ca' }} />
 
@@ -340,7 +345,8 @@ export function App() {
 
   function applyPath(path: string) {
     const [a, b] = path.split('/').filter(Boolean)
-    if (a === 'standings') return setView('standings')
+    if (a === 'groups' || a === 'standings') return setView('standings')
+    if (a === 'knockouts') return setView('knockouts')
     if (a === 'group' && b) {
       setGroupId(b.toUpperCase())
       return setView('group')
@@ -395,7 +401,8 @@ export function App() {
     openGroup: (id) => navTo(() => { setGroupId(id); setView('group') }, `/group/${id.toLowerCase()}`),
     openMatch: (id) => navTo(() => { setMatchId(id); setView('match') }, `/match/${id}`),
     goToday: () => navTo(() => { setView('day'); setDayOff(0) }, '/'),
-    goStandings: () => navTo(() => setView('standings'), '/standings'),
+    goGroups: () => navTo(() => setView('standings'), '/groups'),
+    goKnockouts: () => navTo(() => setView('knockouts'), '/knockouts'),
     prevDay: () => { const n = dayOff - 1; navTo(() => { setView('day'); setDayOff(n) }, n === 0 ? '/' : `/day/${dateKey(n)}`) },
     nextDay: () => { const n = dayOff + 1; navTo(() => { setView('day'); setDayOff(n) }, n === 0 ? '/' : `/day/${dateKey(n)}`) },
   }
@@ -414,6 +421,7 @@ export function App() {
           <>
             {view === 'day' && <DayView off={dayOff} ctx={ctx} nav={nav} />}
             {view === 'standings' && <StandingsView ctx={ctx} nav={nav} />}
+            {view === 'knockouts' && <KnockoutsView payload={ctx.payload} onOpenTeam={nav.openTeam} />}
             {view === 'group' && groupId && <GroupView groupId={groupId} ctx={ctx} nav={nav} />}
             {view === 'team' && teamId && <TeamView teamId={teamId} ctx={ctx} nav={nav} />}
             {view === 'match' && matchId && <MatchView matchId={matchId} ctx={ctx} nav={nav} />}

@@ -10,7 +10,8 @@ const nav = {
   openGroup() {},
   openMatch() {},
   goToday() {},
-  goStandings() {},
+  goGroups() {},
+  goKnockouts() {},
   prevDay() {},
   nextDay() {},
 }
@@ -43,9 +44,10 @@ const tname = p.groups[0].table[0].name
 
 const mid = p.matches.find((m) => m.group)?.id ?? p.matches[0].id
 
-// tense-agnostic: "it matter?" covers Does/Did, "Why?" is always present (a given
-// day's games may all be completed once the group stage ends)
-check('DayView', <DayView off={0} ctx={ctx} nav={nav} />, ['it matter?', 'Why?'])
+// "Why?" is on every card in every phase; the lead verdict block is phase-
+// dependent (Does/Did it matter? in the group stage, Expected to win / Result in
+// the knockouts), so we don't assert on it here.
+check('DayView', <DayView off={0} ctx={ctx} nav={nav} />, ['Why?'])
 check('GroupView', <GroupView groupId={gid} ctx={ctx} nav={nav} />, [`Group ${gid}`, 'Pts', 'Matches'])
 check('TeamView', <TeamView teamId={tid} ctx={ctx} nav={nav} />, [tname, 'Current status', 'Past matches'])
 check('MatchView', <MatchView matchId={mid} ctx={ctx} nav={nav} />, ['it matter?'])

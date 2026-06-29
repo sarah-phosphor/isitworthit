@@ -48,6 +48,8 @@ export interface CardVM {
   changeLabel: string
   whatChanges: string
   whyGloss: GlossVM
+  predictionWhy?: string // upcoming/live knockout cards: lead with Expected result, explain the prediction here
+  koResult?: string // finished knockout cards: lead with the result instead of the verdict
   venue: string
   hasChances: boolean
   chances: Chance[]
@@ -87,6 +89,30 @@ function chancesFrom(p: { home: number; draw: number; away: number }, m: Match):
   ]
 }
 
+// For a knockout game the "Does it matter?" verdict is always Yes, so the card
+// instead leads with the Expected result and explains WHY that's the prediction.
+// The reason is grounded, not invented: a live game cites the current score; an
+// upcoming game cites the two sides' group-stage form (the same signal the form
+// model uses). Group games never call this.
+function knockoutPredictionWhy(match: Match, ctx: QualContext, chances: Chance[]): string {
+  if (match.state === 'live' && match.score) {
+    const { home: sh, away: sa } = match.score
+    if (sh === sa) return `Level at ${sh}–${sa} — nothing between them yet.`
+    const leader = sh > sa ? match.home : match.away
+    return `${leader} lead ${Math.max(sh, sa)}–${Math.min(sh, sa)}, tilting the odds their way.`
+  }
+  const hp = chances[0]?.pct ?? 0
+  const ap = chances[2]?.pct ?? 0
+  const favIsHome = hp >= ap
+  const favRow = ctx.rowByTeam.get(favIsHome ? match.homeId : match.awayId)
+  const dogRow = ctx.rowByTeam.get(favIsHome ? match.awayId : match.homeId)
+  if (Math.abs(hp - ap) <= 6 || !favRow || !dogRow) return 'Little between them on group-stage form — close to a coin toss.'
+  const finish = (r: { rank: number }) => (r.rank === 1 ? 'won their group' : r.rank === 2 ? 'came second' : 'came third')
+  const fav = favIsHome ? match.home : match.away
+  const dog = favIsHome ? match.away : match.home
+  return `${fav} ${finish(favRow)} (${favRow.pts} pts, ${favRow.gdLabel}); ${dog} ${finish(dogRow)} (${dogRow.pts} pts, ${dogRow.gdLabel}).`
+}
+
 export function buildCard(
   match: Match,
   ctx: QualContext,
@@ -110,6 +136,15 @@ export function buildCard(
 
   const homeClickable = ctx.rowByTeam.has(match.homeId)
   const awayClickable = ctx.rowByTeam.has(match.awayId)
+
+  // A finished knockout game leads with the result instead of the moot
+  // "Did it matter? Yes" verdict. (Sarah, 2026-06-29)
+  let koResult: string | undefined
+  if (match.stage === 'ko' && isCompleted) {
+    const sc = match.score
+    const w = sc ? (sc.home > sc.away ? home : sc.away > sc.home ? away : null) : null
+    koResult = w ? `${w} advanced; ${w === home ? away : home} is out.` : 'Settled in extra time or penalties.'
+  }
 
   return {
     id: match.id,
@@ -136,6 +171,8 @@ export function buildCard(
     changeLabel: isCompleted ? 'What changed?' : 'What changes?',
     whatChanges: e.whatChanges,
     whyGloss: gloss(e.why),
+    predictionWhy: match.stage === 'ko' && !isCompleted ? knockoutPredictionWhy(match, ctx, chances) : undefined,
+    koResult,
     hasChances: chances.length > 0,
     chances,
     openHome: () => homeClickable && nav.openTeam(match.homeId),
